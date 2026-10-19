@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Complete Rider features in users-frontend: duty ON/OFF toggle, pickup/delivery tasks with OTP verification, photo proof upload, failed delivery flow with reasons, earnings tracker (demo calculation), map navigation links for pickup addresses. Rider sees pickup/drop addresses with OTPs when needed.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Existing Rider.jsx in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Rider.jsx already has duty toggle and OTP flows; enhance with map navigation: for each shipment with status 'assigned', add 'Open in Maps' link <a href={'https://www.google.com/maps?q=' + encodeURIComponent(s.pickup.address)} target='_blank' rel='noopener'>",
     "Add earnings tracker to Rider: fetch GET /shipments/mine; filter by status 'delivered'; calculate total deliveries count; hardcode ₹50 per delivery (backend doesn't expose rider earnings in pilot); display 'X deliveries · ₹Y earned' at top of page",
@@ -24,5 +24,5 @@
     "Manual test: picked shipment → click 'Mark failed' → select 'Customer unavailable' → submit → shipment status 'failed'"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All four enhancements successfully implemented: 1) Map navigation link added for assigned shipments using Google Maps with encoded pickup address. 2) Earnings tracker displays delivered shipments count with hardcoded ₹50 per delivery calculation. 3) Photo proof upload with base64 conversion and preview added for picked shipments, integrated into delivery confirmation. 4) Failed delivery flow with dropdown reasons (Customer unavailable, Wrong address, Damaged box, Other) and notes textarea, calling POST /shipments/:id/fail. Build verified successfully (exit 0)."
 }
