@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, inr } from "../api.js";
+import { useCart } from "../CartContext.jsx";
 
 export function BuyerSearch() {
   const [q, setQ] = useState("OPPO A58");
@@ -8,10 +9,10 @@ export function BuyerSearch() {
   const [filteredSkus, setFilteredSkus] = useState([]);
   const [offers, setOffers] = useState(null);
   const [error, setError] = useState("");
-  const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(false);
   const navigate = useNavigate();
+  const { cart, addToCart, clearCart } = useCart();
 
   // Filters
   const [filterBrand, setFilterBrand] = useState("");
@@ -48,10 +49,6 @@ export function BuyerSearch() {
     }
   }
 
-  function addToCart(inventoryId) {
-    setCart([...cart, { inventoryId, qty: 1 }]);
-  }
-
   async function checkout() {
     if (cart.length === 0) return;
     setLoading(true);
@@ -61,7 +58,7 @@ export function BuyerSearch() {
       const item = cart[0];
       const created = await api("/orders", { method: "POST", body: { inventoryId: item.inventoryId, qty: item.qty } });
       const paid = await api(`/orders/${created.order._id}/confirm`, { method: "POST" });
-      setCart([]);
+      clearCart();
       navigate(`/app/orders/${paid.order._id}`);
     } catch (err) {
       setError(err.message);

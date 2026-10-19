@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
+import { useCart } from "../CartContext.jsx";
 
 const menus = {
   buyer: [
@@ -28,6 +29,7 @@ export default function Layout() {
   const { user, business, logout } = useAuth();
   const navigate = useNavigate();
   const items = menus[user?.role] || [];
+  const { cart } = useCart();
 
   return (
     <div className="layout">
@@ -41,8 +43,13 @@ export default function Layout() {
         </div>
         <nav>
           {items.map(([label, to]) => (
-            <NavLink key={to} to={to}>
-              {label}
+            <NavLink key={to} to={to} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>{label}</span>
+              {to === "/app/search" && cart.length > 0 && (
+                <span className="badge" style={{ marginLeft: 8 }}>
+                  {cart.length}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
