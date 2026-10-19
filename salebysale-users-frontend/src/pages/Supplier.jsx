@@ -9,12 +9,21 @@ export function SupplierStock() {
   const [showSkuBrowser, setShowSkuBrowser] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
-    const [a, b] = await Promise.all([api("/supplier/inventory"), api("/catalog/search?q=")]);
-    setInventory(a.inventory);
-    setSkus(b.skus);
-    if (b.skus[0]) setForm((f) => ({ ...f, skuId: f.skuId || b.skus[0]._id }));
+    setLoading(true);
+    try {
+      const [a, b] = await Promise.all([api("/supplier/inventory"), api("/catalog/search?q=")]);
+      setInventory(a.inventory);
+      setSkus(b.skus);
+      if (b.skus[0]) setForm((f) => ({ ...f, skuId: f.skuId || b.skus[0]._id }));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     load();
@@ -81,6 +90,9 @@ export function SupplierStock() {
     setSearchQuery("");
     setSearchResults([]);
   }
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   return (
     <div>
@@ -211,6 +223,7 @@ export function SupplierStock() {
           ))}
         </tbody>
       </table>
+      {inventory.length === 0 && <p className='muted'>No inventory yet. Add stock above.</p>}
     </div>
   );
 }
@@ -363,20 +376,33 @@ function OrderCard({ order, onUpdate }) {
 
 export function SupplierOrders() {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   
   async function load() {
-    const d = await api("/supplier/orders");
-    setOrders(d.orders);
+    setLoading(true);
+    try {
+      const d = await api("/supplier/orders");
+      setOrders(d.orders);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
   
   useEffect(() => {
     load();
   }, []);
 
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+
   return (
     <div>
       <h2>Incoming orders</h2>
       <p className="tiny">Accept deadline ~5 min. Packing requires IMEI (encrypted, restricted).</p>
+      {orders.length === 0 && <p className='muted'>No orders yet</p>}
       {orders.map((o) => (
         <OrderCard key={o._id} order={o} onUpdate={load} />
       ))}
@@ -388,12 +414,18 @@ export function SupplierPayouts() {
   const [rows, setRows] = useState([]);
   const [allRows, setAllRows] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   
   useEffect(() => {
-    api("/supplier/settlements").then((d) => {
-      setAllRows(d.settlements);
-      setRows(d.settlements);
-    });
+    setLoading(true);
+    api("/supplier/settlements")
+      .then((d) => {
+        setAllRows(d.settlements);
+        setRows(d.settlements);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -403,6 +435,9 @@ export function SupplierPayouts() {
       setRows(allRows.filter(r => r.status === statusFilter));
     }
   }, [statusFilter, allRows]);
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   return (
     <div>
@@ -445,6 +480,7 @@ export function SupplierPayouts() {
           ))}
         </tbody>
       </table>
+      {rows.length === 0 && <p className='muted'>No settlements yet</p>}
     </div>
   );
 }

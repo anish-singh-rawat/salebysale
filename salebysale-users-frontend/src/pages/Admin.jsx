@@ -3,10 +3,21 @@ import { api, inr } from "../api.js";
 
 export function Dashboard() {
   const [kpis, setKpis] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   useEffect(() => {
-    api("/admin/kpis").then((d) => setKpis(d.kpis));
+    setLoading(true);
+    api("/admin/kpis")
+      .then((d) => setKpis(d.kpis))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
-  if (!kpis) return <p>Loading…</p>;
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  if (!kpis) return <p className='muted'>No data available</p>;
+  
   const cells = [
     ["Active suppliers", kpis.activeSuppliers],
     ["Live SKUs", kpis.liveSkus],
@@ -38,10 +49,20 @@ export function Approvals() {
   const [suppliers, setSuppliers] = useState([]);
   const [buyers, setBuyers] = useState([]);
   const [identity, setIdentity] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   async function load() {
-    const [s, b] = await Promise.all([api("/admin/suppliers"), api("/admin/buyers")]);
-    setSuppliers(s.suppliers);
-    setBuyers(b.buyers);
+    setLoading(true);
+    try {
+      const [s, b] = await Promise.all([api("/admin/suppliers"), api("/admin/buyers")]);
+      setSuppliers(s.suppliers);
+      setBuyers(b.buyers);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     load();
@@ -50,10 +71,15 @@ export function Approvals() {
     await api("/businesses/verify", { method: "POST", body: { businessId: id, status } });
     load();
   }
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  
   return (
     <div>
       <h2>KYC & private identity</h2>
       <p className="tiny">Buyer UI never sees this mapping. Admin-only.</p>
+      {[...suppliers, ...buyers].length === 0 && <p className='muted'>No pending KYC requests</p>}
       {[...suppliers, ...buyers].map((b) => (
         <div className="card offer" key={b._id} style={{ marginBottom: 8 }}>
           <div>
@@ -86,12 +112,24 @@ export function Approvals() {
 export function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [imei, setImei] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   useEffect(() => {
-    api("/admin/orders").then((d) => setOrders(d.orders));
+    setLoading(true);
+    api("/admin/orders")
+      .then((d) => setOrders(d.orders))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  
   return (
     <div>
       <h2>Order orchestration</h2>
+      {orders.length === 0 && <p className='muted'>No orders yet</p>}
       <table>
         <thead>
           <tr>
@@ -134,12 +172,24 @@ export function AdminOrders() {
 
 export function AdminStock() {
   const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   useEffect(() => {
-    api("/admin/inventory").then((d) => setInventory(d.inventory));
+    setLoading(true);
+    api("/admin/inventory")
+      .then((d) => setInventory(d.inventory))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  
   return (
     <div>
       <h2>Live inventory truth</h2>
+      {inventory.length === 0 && <p className='muted'>No inventory yet</p>}
       <table>
         <thead>
           <tr>
@@ -175,15 +225,29 @@ export function Dispatch() {
   const [orders, setOrders] = useState([]);
   const [riderId, setRiderId] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   async function load() {
-    const [r, o] = await Promise.all([api("/admin/riders"), api("/admin/orders")]);
-    setRiders(r.riders);
-    setOrders(o.orders.filter((x) => ["packing", "accepted", "assigned", "picked"].includes(x.status)));
-    if (r.riders[0]) setRiderId(r.riders[0]._id);
+    setLoading(true);
+    try {
+      const [r, o] = await Promise.all([api("/admin/riders"), api("/admin/orders")]);
+      setRiders(r.riders);
+      setOrders(o.orders.filter((x) => ["packing", "accepted", "assigned", "picked"].includes(x.status)));
+      if (r.riders[0]) setRiderId(r.riders[0]._id);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     load();
   }, []);
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  
   return (
     <div>
       <h2>Geo dispatch</h2>
@@ -207,6 +271,7 @@ export function Dispatch() {
         </button>
       </div>
       {msg && <div className="ok">{msg}</div>}
+      {orders.length === 0 && <p className='muted'>No orders for dispatch</p>}
       {orders.map((o) => (
         <div className="card offer" key={o._id} style={{ marginBottom: 8 }}>
           <div>
@@ -230,9 +295,20 @@ export function Dispatch() {
 
 export function Disputes() {
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   useEffect(() => {
-    api("/admin/disputes").then((d) => setRows(d.disputes));
+    setLoading(true);
+    api("/admin/disputes")
+      .then((d) => setRows(d.disputes))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  
   return (
     <div>
       <h2>Dispute audit</h2>

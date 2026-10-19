@@ -4,22 +4,31 @@ import { api, inr } from "../api.js";
 export function Dashboard() {
   const [kpis, setKpis] = useState(null);
   const [slaWarning, setSlaWarning] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function loadData() {
-    const [kpiData, ordersData] = await Promise.all([
-      api("/admin/kpis"),
-      api("/admin/orders")
-    ]);
-    setKpis(kpiData.kpis);
-    
-    // Calculate SLA monitoring: orders past ETA
-    const now = new Date();
-    const pastEta = ordersData.orders.filter(o => 
-      ['assigned', 'picked'].includes(o.status) && 
-      o.sla?.etaMax && 
-      new Date(o.sla.etaMax) < now
-    ).length;
-    setSlaWarning(pastEta);
+    setLoading(true);
+    try {
+      const [kpiData, ordersData] = await Promise.all([
+        api("/admin/kpis"),
+        api("/admin/orders")
+      ]);
+      setKpis(kpiData.kpis);
+      
+      // Calculate SLA monitoring: orders past ETA
+      const now = new Date();
+      const pastEta = ordersData.orders.filter(o => 
+        ['assigned', 'picked'].includes(o.status) && 
+        o.sla?.etaMax && 
+        new Date(o.sla.etaMax) < now
+      ).length;
+      setSlaWarning(pastEta);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -29,7 +38,9 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!kpis) return <p>Loading…</p>;
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  if (!kpis) return <p className='muted'>No data available</p>;
   
   const cells = [
     ["Active suppliers", kpis.activeSuppliers],
@@ -69,11 +80,20 @@ export function Approvals() {
   const [identity, setIdentity] = useState(null);
   const [notes, setNotes] = useState({});
   const [selectedId, setSelectedId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   
   async function load() {
-    const [s, b] = await Promise.all([api("/admin/suppliers"), api("/admin/buyers")]);
-    setSuppliers(s.suppliers);
-    setBuyers(b.buyers);
+    setLoading(true);
+    try {
+      const [s, b] = await Promise.all([api("/admin/suppliers"), api("/admin/buyers")]);
+      setSuppliers(s.suppliers);
+      setBuyers(b.buyers);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
   
   useEffect(() => {
@@ -85,6 +105,9 @@ export function Approvals() {
     setNotes(prev => ({ ...prev, [id]: '' }));
     load();
   }
+  
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
   
   return (
     <div>
@@ -146,17 +169,26 @@ export function AdminOrders() {
   const [arrangeModal, setArrangeModal] = useState(null);
   const [selectedRider, setSelectedRider] = useState('');
   const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
-    const [ordersData, requestsData, ridersData] = await Promise.all([
-      api("/admin/orders"),
-      api("/admin/requests").catch(() => ({ requests: [] })),
-      api("/admin/riders")
-    ]);
-    setOrders(ordersData.orders);
-    setRequests(requestsData.requests || []);
-    setRiders(ridersData.riders);
-    if (ridersData.riders.length > 0) setSelectedRider(ridersData.riders[0]._id);
+    setLoading(true);
+    try {
+      const [ordersData, requestsData, ridersData] = await Promise.all([
+        api("/admin/orders"),
+        api("/admin/requests").catch(() => ({ requests: [] })),
+        api("/admin/riders")
+      ]);
+      setOrders(ordersData.orders);
+      setRequests(requestsData.requests || []);
+      setRiders(ridersData.riders);
+      if (ridersData.riders.length > 0) setSelectedRider(ridersData.riders[0]._id);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -196,6 +228,9 @@ export function AdminOrders() {
     : orders.filter(o => o.status === statusFilter);
 
   const onDutyRiders = riders.filter(r => r.dutyOn);
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   return (
     <div>
@@ -374,9 +409,15 @@ export function AdminStock() {
   const [inventory, setInventory] = useState([]);
   const [imeiModal, setImeiModal] = useState(null);
   const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api("/admin/inventory").then((d) => setInventory(d.inventory));
+    setLoading(true);
+    api("/admin/inventory")
+      .then((d) => setInventory(d.inventory))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   async function viewImei(inventoryId) {
@@ -416,6 +457,9 @@ export function AdminStock() {
     const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
     return new Date(lastVerifiedAt) < fourHoursAgo;
   }
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   return (
     <div>
@@ -509,12 +553,21 @@ export function Dispatch() {
   const [riderId, setRiderId] = useState("");
   const [msg, setMsg] = useState("");
   const [simulation, setSimulation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
-    const [r, o] = await Promise.all([api("/admin/riders"), api("/admin/orders")]);
-    setRiders(r.riders);
-    setOrders(o.orders.filter((x) => ["packing", "accepted", "assigned", "picked"].includes(x.status)));
-    if (r.riders[0]) setRiderId(r.riders[0]._id);
+    setLoading(true);
+    try {
+      const [r, o] = await Promise.all([api("/admin/riders"), api("/admin/orders")]);
+      setRiders(r.riders);
+      setOrders(o.orders.filter((x) => ["packing", "accepted", "assigned", "picked"].includes(x.status)));
+      if (r.riders[0]) setRiderId(r.riders[0]._id);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -572,6 +625,9 @@ export function Dispatch() {
       allScores: riderScores
     });
   }
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   return (
     <div>
@@ -673,10 +729,19 @@ export function Disputes() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [actionNotes, setActionNotes] = useState({});
   const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
-    const d = await api("/admin/disputes");
-    setRows(d.disputes);
+    setLoading(true);
+    try {
+      const d = await api("/admin/disputes");
+      setRows(d.disputes);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -702,6 +767,9 @@ export function Disputes() {
   const filteredRows = statusFilter === 'all' 
     ? rows 
     : rows.filter(d => d.status === statusFilter);
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   return (
     <div>

@@ -12,10 +12,19 @@ export default function Rider() {
   const [failedReason, setFailedReason] = useState({});
   const [showFailForm, setShowFailForm] = useState({});
   const [failNotes, setFailNotes] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
-    const d = await api("/shipments/mine");
-    setShipments(d.shipments);
+    setLoading(true);
+    try {
+      const d = await api("/shipments/mine");
+      setShipments(d.shipments);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     load();
@@ -55,6 +64,9 @@ export default function Rider() {
     load();
   }
 
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+
   return (
     <div>
       <h2>Rider duty</h2>
@@ -82,6 +94,7 @@ export default function Rider() {
       </div>
 
       {msg && <div className="ok">{msg}</div>}
+      {shipments.length === 0 && <p className='muted'>No shipments yet. Turn duty ON to receive assignments.</p>}
       {shipments.map((s) => (
         <div className="card" key={s._id} style={{ marginBottom: 12 }}>
           <span className="badge">{s.status}</span>

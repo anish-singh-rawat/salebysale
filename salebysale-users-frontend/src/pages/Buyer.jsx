@@ -9,7 +9,8 @@ export function BuyerSearch() {
   const [offers, setOffers] = useState(null);
   const [error, setError] = useState("");
   const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [offersLoading, setOffersLoading] = useState(false);
   const navigate = useNavigate();
 
   // Filters
@@ -21,6 +22,7 @@ export function BuyerSearch() {
   async function search(e) {
     e?.preventDefault();
     setError("");
+    setLoading(true);
     try {
       const data = await api(`/catalog/search?q=${encodeURIComponent(q)}`);
       setSkus(data.skus);
@@ -28,16 +30,21 @@ export function BuyerSearch() {
       setOffers(null);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
   async function availability(skuId) {
     setError("");
+    setOffersLoading(true);
     try {
       const data = await api(`/inventory/availability?sku_id=${skuId}`);
       setOffers(data);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setOffersLoading(false);
     }
   }
 
@@ -58,7 +65,6 @@ export function BuyerSearch() {
       navigate(`/app/orders/${paid.order._id}`);
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   }
@@ -84,6 +90,9 @@ export function BuyerSearch() {
   useEffect(() => {
     search();
   }, []);
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
 
   // Extract unique filter values
   const brands = [...new Set(skus.map((s) => s.brand))];
@@ -149,6 +158,9 @@ export function BuyerSearch() {
         </div>
       )}
 
+      {filteredSkus.length === 0 && skus.length > 0 && <p className='muted'>No products match selected filters.</p>}
+      {skus.length === 0 && <p className='muted'>No products found. Try different search.</p>}
+
       <div className="grid cols-2">
         {filteredSkus.map((s) => (
           <button key={s._id} className="card" onClick={() => availability(s._id)} style={{ textAlign: "left" }}>
@@ -197,12 +209,18 @@ export function BuyerOrders() {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api("/orders").then((d) => {
-      setOrders(d.orders);
-      setFilteredOrders(d.orders);
-    });
+    setLoading(true);
+    api("/orders")
+      .then((d) => {
+        setOrders(d.orders);
+        setFilteredOrders(d.orders);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -214,6 +232,10 @@ export function BuyerOrders() {
   }, [statusFilter, orders]);
 
   const statuses = ["reserved", "awaiting_admin", "assigned", "picked", "delivered", "disputed", "cancelled"];
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  if (orders.length === 0) return <p className='muted'>No orders yet</p>;
 
   return (
     <div>
@@ -263,10 +285,19 @@ export function BuyerOrder() {
   const [cancelReason, setCancelReason] = useState("");
   const [msg, setMsg] = useState("");
   const [etaRemaining, setEtaRemaining] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function load() {
-    const d = await api(`/orders/${id}`);
-    setOrder(d.order);
+    setLoading(true);
+    try {
+      const d = await api(`/orders/${id}`);
+      setOrder(d.order);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function cancelOrder() {
@@ -299,7 +330,10 @@ export function BuyerOrder() {
     }
   }, [order]);
 
-  if (!order) return <p>Loading…</p>;
+  if (loading) return <p>Loading…</p>;
+  if (error) return <div className='alert'>{error}</div>;
+  if (!order) return <p className='muted'>Order not found</p>;
+
   const sku = order.items?.[0]?.skuId;
   const canCancel = order.status === "reserved" || order.status === "awaiting_admin";
 

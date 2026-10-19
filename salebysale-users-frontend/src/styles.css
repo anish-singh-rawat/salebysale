@@ -125,4 +125,23 @@ th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: upp
 @media (max-width: 900px) {
   .hero, .grid.cols-3, .grid.cols-4, .layout, .offer { grid-template-columns: 1fr; }
   .side { position: relative; height: auto; }
+  
+  /* Mobile tap targets - min 44x44px */
+  .btn, button, input, select, textarea { min-height: 44px; }
+  
+  /* Collapsible filters */
+  .filters-collapsed { display: none; }
+  .filters-toggle { display: block; margin-bottom: 12px; }
 }
+
+/* Sticky bottom action bar for mobile checkout */
+.sticky-bottom {
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  z-index: 10;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+}
+
