@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Complete Buyer (retailer) features in users-frontend: search with filters (brand, RAM, storage, color), cart + prepaid checkout, order list with filters, order detail with delivery tracking timeline and cancel button. CRITICAL: enforce supplier anonymity — display only 'SELL BY SELL verified stock' label, never render supplierId or supplierId.shopName. Backend already sanitizes responses for buyer role; frontend must never render any supplier identity field.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Extend BuyerSearch in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Buyer.jsx: add filter UI (dropdowns for brand, RAM, storage, color) above search results; client-side filter skus array by selected values; confirm listingLabel in offers shows 'SELL BY SELL verified stock' (not supplier name)",
     "Add cart state to BuyerSearch: replace direct buy() with addToCart() → stores {inventoryId, qty: 1} in React state; add cart badge in nav (use Context or lift state to Layout.jsx); add Checkout button → calls POST /orders then POST /orders/:id/confirm → navigate to /app/orders/:id; add loading spinner during API calls; add error alert on failure",
@@ -24,5 +24,5 @@
     "Manual test: order detail page shows timeline, deliveryOtp, and 'Supplier public identity hidden' message"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Successfully implemented all FEAT-002 requirements:\n1. BuyerSearch: Added filter dropdowns (brand, RAM, storage, color) with client-side filtering of skus array. Confirmed listingLabel displays 'SELL BY SELL verified stock' - no supplier names rendered.\n2. Cart functionality: Replaced direct buy() with addToCart(), added cart badge showing item count, implemented checkout flow with POST /orders + POST /orders/:id/confirm, added loading spinner and error handling, navigates to order detail on success.\n3. BuyerOrders: Added status filter dropdown with all statuses (reserved, awaiting_admin, assigned, picked, delivered, disputed, cancelled), implemented client-side filtering, confirmed listingLabel column shows verified stock label only.\n4. BuyerOrder: Added events timeline with vertical CSS styling (left border + dots), prominently displays deliveryOtp, added Cancel button for reserved/awaiting_admin orders with reason input, implemented ETA countdown for assigned/picked orders showing remaining minutes, confirmed 'Supplier public identity hidden' message displayed.\n\nPrivacy verification: grep 'supplierId' in Buyer.jsx returned zero matches in rendered JSX elements. Build verification: npm run build exited with code 0, dist/ created successfully."
 }
