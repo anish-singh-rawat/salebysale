@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Complete Supplier (wholesaler) features in users-frontend: CSV bulk upload for stock, SKU mapping helper, incoming orders with countdown timer + photo upload + packing checklist, IMEI entry (plaintext sent, backend encrypts), payouts with commission breakdown. Supplier UI must NOT show buyer contact details (buyerId.email, buyerId.phone not rendered).",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Add CSV bulk upload to SupplierStock in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Supplier.jsx: add <input type='file' accept='.csv'> below form; on file select, parse CSV with FileReader (columns: skuCode, availableQty, minimumPrice, readyInMinutes, status); call POST /supplier/inventory/bulk {items: [...]}; show success message with count; reload inventory list",
     "Add SKU mapping helper to SupplierStock: add button 'Browse SKUs' → opens modal/expandable section → fetch GET /catalog/search?q= → display table of skus with skuCode, brand, model, variant, color → click SKU → auto-fill form's skuId dropdown",
@@ -27,5 +27,5 @@
     "Manual test: incoming order shows countdown; accept → countdown stops; check all checklist boxes → upload photo → enter IMEI → Pack button enabled → click Pack → order status 'packing'"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 6 features successfully implemented: (1) CSV bulk upload with FileReader parsing columns skuCode,availableQty,minimumPrice,readyInMinutes,status → POST /supplier/inventory/bulk with success message showing item count; (2) SKU mapping helper with 'Browse SKUs' button → modal with search → click SKU auto-fills form; (3) Countdown timer for reserved/awaiting_accept orders calculating from acceptDeadline with setInterval updating every second showing 'Xm Ys remaining' or 'Expired'; (4) Photo upload with file input → base64 conversion → preview → photoUrl sent in pack request; (5) 3-checkbox packing checklist (sealed box, IMEI scanned, no tampering) that must all be checked before Pack button enables; (6) Payouts table enhanced with 4 columns (Landed Price, Platform Fee, Delivery Charge, Net Payout) plus status filter dropdown (all/eligible/paid/pending). Privacy verified: grep confirms zero matches for buyerId.email or buyerId.phone in Supplier.jsx. Build verification: npm run build exits code 0, dist created in 462ms. OrderCard component extracted for cleaner code organization with per-order state management for photo, checklist, timer."
 }
