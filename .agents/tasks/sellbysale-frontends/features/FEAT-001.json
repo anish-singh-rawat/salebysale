@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix admin-frontend port conflict and enforce role-based app segregation. Admin-frontend must run on port 5174 (not 5173). Login.jsx in users-frontend passes app: 'users' (blocks admin/rider); admin-frontend passes app: 'admin' (blocks buyer/supplier). Remove buyer/supplier/rider routes from admin-frontend App.jsx (admin-only routes: /app/dashboard, /app/approvals, /app/admin-orders, /app/admin-stock, /app/dispatch, /app/disputes).",
+  "status": "completed",
+  "steps": [
+    "Change server.port from 5173 to 5174 in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/vite.config.js",
+    "Modify /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Login.jsx: add app: 'users' to the POST /auth/login body (line ~12 in login function)",
+    "Modify /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Login.jsx: add app: 'admin' to the POST /auth/login body",
+    "Remove Buyer.jsx, Supplier.jsx, Rider.jsx imports and routes from /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/App.jsx: delete routes /app/search, /app/orders, /app/orders/:id, /app/stock, /app/incoming, /app/payouts, /app/rides; keep only /app/dashboard, /app/approvals, /app/admin-orders, /app/admin-stock, /app/dispatch, /app/disputes"
+  ],
+  "acceptance_criteria": [
+    "Admin-frontend dev server starts on http://localhost:5174 without port conflict",
+    "Buyer login on admin-frontend returns 403 error",
+    "Admin login on users-frontend returns 403 error",
+    "Navigating to http://localhost:5174/app/search returns 404 or redirects to /app/dashboard"
+  ],
+  "verification": [
+    "Run `npm run dev` in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend → confirm console shows 'Local: http://localhost:5174'",
+    "Attempt buyer login on admin-frontend → check network tab for 403 response",
+    "Attempt admin login on users-frontend → check network tab for 403 response"
+  ],
+  "blocked_reason": null,
+  "findings": "All changes implemented successfully. Port changed to 5174 in admin-frontend vite.config.js. App parameter added to login functions in both frontends (app: 'users' for users-frontend, app: 'admin' for admin-frontend). Buyer/Supplier/Rider imports and routes removed from admin-frontend App.jsx - only admin routes remain (/app/dashboard, /app/approvals, /app/admin-orders, /app/admin-stock, /app/dispatch, /app/disputes). Both frontends build successfully. Backend validation will enforce 403 for cross-app login attempts."
+}

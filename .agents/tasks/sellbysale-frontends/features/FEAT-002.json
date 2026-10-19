@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Complete Buyer (retailer) features in users-frontend: search with filters (brand, RAM, storage, color), cart + prepaid checkout, order list with filters, order detail with delivery tracking timeline and cancel button. CRITICAL: enforce supplier anonymity — display only 'SELL BY SELL verified stock' label, never render supplierId or supplierId.shopName. Backend already sanitizes responses for buyer role; frontend must never render any supplier identity field.",
+  "status": "pending",
+  "steps": [
+    "Extend BuyerSearch in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Buyer.jsx: add filter UI (dropdowns for brand, RAM, storage, color) above search results; client-side filter skus array by selected values; confirm listingLabel in offers shows 'SELL BY SELL verified stock' (not supplier name)",
+    "Add cart state to BuyerSearch: replace direct buy() with addToCart() → stores {inventoryId, qty: 1} in React state; add cart badge in nav (use Context or lift state to Layout.jsx); add Checkout button → calls POST /orders then POST /orders/:id/confirm → navigate to /app/orders/:id; add loading spinner during API calls; add error alert on failure",
+    "Extend BuyerOrders in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Buyer.jsx: add status filter dropdown (all, reserved, awaiting_admin, assigned, picked, delivered, disputed, cancelled); client-side filter orders array; confirm table shows items[0].listingLabel (not supplier name)",
+    "Extend BuyerOrder in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Buyer.jsx: display order.events as vertical timeline (CSS: left border + dots); show order.tracking.deliveryOtp prominently; add Cancel order button (POST /orders/:id/cancel {reason}) for status 'reserved' or 'awaiting_admin'; add ETA countdown if status is 'assigned' or 'picked' (calculate from order.sla.etaMax); confirm 'Supplier public identity hidden' message displayed"
+  ],
+  "acceptance_criteria": [
+    "BuyerSearch shows filters for brand/RAM/storage/color; filtering updates grid",
+    "BuyerSearch displays 'SELL BY SELL verified stock' label for all offers; NO supplier name visible",
+    "Cart badge shows item count; Checkout button triggers POST /orders + POST /orders/:id/confirm and navigates to order detail",
+    "BuyerOrders table has status filter; filtering works; listingLabel column shows 'SELL BY SELL verified stock'",
+    "BuyerOrder shows timeline of events; deliveryOtp displayed; Cancel button visible for cancelable orders; ETA countdown shows remaining minutes",
+    "Visual inspection: grep 'supplierId' in Buyer.jsx JSX sections → zero matches in rendered elements"
+  ],
+  "verification": [
+    "Run `npm run build` in /Users/mac/freeLancing/salebysale/salebysale-users-frontend → must exit code 0",
+    "Manual test: buyer searches 'OPPO A58' → filters by brand OPPO → results update → click availability → confirm offers show 'SELL BY SELL verified stock' label and NO supplier shopName",
+    "Manual test: add item to cart → badge shows '1' → click Checkout → loading spinner → redirects to /app/orders/:id with status 'awaiting_admin'",
+    "Manual test: order detail page shows timeline, deliveryOtp, and 'Supplier public identity hidden' message"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

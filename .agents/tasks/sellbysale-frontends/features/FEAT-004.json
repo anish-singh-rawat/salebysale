@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Complete Rider features in users-frontend: duty ON/OFF toggle, pickup/delivery tasks with OTP verification, photo proof upload, failed delivery flow with reasons, earnings tracker (demo calculation), map navigation links for pickup addresses. Rider sees pickup/drop addresses with OTPs when needed.",
+  "status": "pending",
+  "steps": [
+    "Existing Rider.jsx in /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Rider.jsx already has duty toggle and OTP flows; enhance with map navigation: for each shipment with status 'assigned', add 'Open in Maps' link <a href={'https://www.google.com/maps?q=' + encodeURIComponent(s.pickup.address)} target='_blank' rel='noopener'>",
+    "Add earnings tracker to Rider: fetch GET /shipments/mine; filter by status 'delivered'; calculate total deliveries count; hardcode ₹50 per delivery (backend doesn't expose rider earnings in pilot); display 'X deliveries · ₹Y earned' at top of page",
+    "Add photo proof upload to Rider delivery flow: for shipments with status 'picked', add <input type='file' accept='image/*'> above 'Confirm delivery' button; convert to base64; show preview; pass photoUrl in POST /shipments/:id/deliver {otp, photoUrl, notes}; optionally require photo before enabling delivery button",
+    "Add failed delivery flow to Rider: for shipments with status 'picked', add 'Mark failed' button; on click, show dropdown with reasons (Customer unavailable, Wrong address, Damaged box, Other) + notes textarea; call POST /shipments/:id/fail {reason}; show confirmation message; order status → 'disputed'"
+  ],
+  "acceptance_criteria": [
+    "Rider duty toggle works (POST /riders/duty {on: true/false}); user.dutyOn updates",
+    "Assigned shipment shows 'Open in Maps' link; clicking opens Google Maps with pickup address",
+    "Earnings section displays 'X deliveries · ₹Y earned' (demo calculation)",
+    "Picked shipment has photo upload field; preview shown; photo sent with delivery confirmation",
+    "Picked shipment has 'Mark failed' button; selecting reason + submitting → shipment status 'failed', order status 'disputed'"
+  ],
+  "verification": [
+    "Run `npm run build` in /Users/mac/freeLancing/salebysale/salebysale-users-frontend → must exit code 0",
+    "Manual test: toggle duty ON → user.dutyOn true; assigned shipment appears → click 'Open in Maps' → Google Maps opens with address",
+    "Manual test: complete 2 deliveries → earnings shows '2 deliveries · ₹100 earned'",
+    "Manual test: picked shipment → upload photo → preview shown → enter delivery OTP → Confirm delivery → shipment status 'delivered'",
+    "Manual test: picked shipment → click 'Mark failed' → select 'Customer unavailable' → submit → shipment status 'failed'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

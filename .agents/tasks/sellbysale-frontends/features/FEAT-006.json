@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-006",
+  "type": "chore",
+  "description": "Add loading spinners, error alerts, empty states to all async pages (cross-cutting); add mobile-responsive CSS for buyer/rider flows (Android-first, 390px viewport); run build verification for both frontends; execute manual E2E order journey test (buyer search with no supplier name → admin arrange with wholesaler name → supplier pack → rider deliver → buyer sees delivered with no supplier name).",
+  "status": "pending",
+  "steps": [
+    "Add loading/error/empty states to ALL async page components in both frontends: pattern is const [data, setData] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); useEffect(() => { setLoading(true); api(...).then(d => setData(d)).catch(e => setError(e.message)).finally(() => setLoading(false)); }, []); if (loading) return <p>Loading…</p>; if (error) return <div className='alert'>{error}</div>; if (!data || data.length === 0) return <p className='muted'>No data yet</p>",
+    "Files to update: /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/pages/Buyer.jsx (all 3 components), Supplier.jsx (all 3 components), Rider.jsx, Admin.jsx (all 6 components); /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx (all 6 components), Login.jsx, Register.jsx",
+    "Add mobile-responsive CSS optimizations to /Users/mac/freeLancing/salebysale/salebysale-users-frontend/src/styles.css: (a) larger tap targets for buttons on mobile (min 44x44px); (b) .offer { grid-template-columns: 1fr; } already exists at @media (max-width: 900px); (c) sticky bottom action bar for checkout/payment: add .sticky-bottom { position: sticky; bottom: 0; background: var(--card); padding: 16px; border-top: 1px solid var(--line); z-index: 10; } and apply to checkout button container on mobile; (d) collapsible filters: add .filters-collapsed class for mobile accordion",
+    "Run build verification: cd /Users/mac/freeLancing/salebysale/salebysale-users-frontend && npm run build (must exit code 0, dist/ created); cd /Users/mac/freeLancing/salebysale/salebysale-admin-frontend && npm run build (must exit code 0, dist/ created); record any build errors and fix (likely unused imports or missing dependencies)",
+    "Execute manual E2E order journey test: (1) Buyer (users-frontend) registers → searches 'OPPO A58' → verifies 'SELL BY SELL verified stock' label (NO supplier name) → adds to cart → checkout → payment authorized → order status 'awaiting_admin'; (2) Admin (admin-frontend) logs in → AdminOrders 'Pending Arrangement' tab → verifies wholesaler.shopName AND retailer.name visible → selects on-duty rider → Arrange Courier → order status 'assigned'; (3) Supplier (users-frontend) logs in → Incoming orders → Accept → enters IMEI + uploads photo → Packs → order status 'packing'; (4) Rider (users-frontend) logs in → Duty ON → sees assigned shipment → enters pickup OTP → Confirm pickup → status 'picked' → enters delivery OTP → Confirm delivery → status 'delivered'; (5) Buyer (users-frontend) refreshes order detail → status 'delivered' → confirms NO supplier name visible anywhere in buyer UI"
+  ],
+  "acceptance_criteria": [
+    "All async pages show loading spinner while fetching; error alert on API failure; empty state message when no data",
+    "Mobile viewport (390px) shows: larger buttons, stacked offer cards, sticky checkout bar, collapsible filters",
+    "Both frontends build successfully: npm run build exits code 0, dist/ folders created, no TypeScript/ESLint errors",
+    "Manual E2E test completes successfully: full order journey from buyer search to delivery, privacy enforced at every step (buyer never sees supplier name, admin does see supplier name)"
+  ],
+  "verification": [
+    "Simulate network delay in Chrome DevTools → loading spinner shows; simulate 500 error → error alert shows; empty orders list → 'No orders yet' message",
+    "Open buyer search on 390px viewport → filters collapsible, cards stacked, checkout button sticky at bottom",
+    "Run `npm run build` in both frontends → both exit code 0; check dist/ folders exist",
+    "Execute full E2E test manually (5 steps above) → confirm privacy rules hold: buyer UI shows 'SELL BY SELL verified stock' at all times, never shows supplierId.shopName; admin UI shows wholesaler.shopName in Pending Arrangement tab"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

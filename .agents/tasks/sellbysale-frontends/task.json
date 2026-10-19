@@ -1,0 +1,7 @@
+{
+  "task_id": "task-sellbysale-frontends",
+  "task_description": "Complete two React frontends for SELL BY SELL marketplace: users-frontend (buyer/supplier/rider) and admin-frontend (admin/owner console). Enforce privacy: buyers never see supplier names. Admin sees all identities.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005", "FEAT-006"],
+  "blocked_reason": null
+}

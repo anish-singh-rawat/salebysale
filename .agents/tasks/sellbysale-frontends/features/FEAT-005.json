@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Complete Admin features in admin-frontend: dashboard with real-time KPIs + SLA monitoring, approvals with private identity reveal + verification notes, **CORE FLOW**: admin order arrangement (GET /admin/requests exposes wholesaler name → POST /admin/orders/:id/arrange assigns courier), order orchestration (cancel/refund), live inventory with supplier names + IMEI tracking (decrypted admin-only), dispatch with matching simulation, disputes with resolution workflow. CRITICAL: admin UI MUST show supplier names, buyer names, GST, IMEI (full private identity layer).",
+  "status": "pending",
+  "steps": [
+    "Enhance Dashboard in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx: add auto-refresh every 30 seconds (setInterval); add SLA monitoring card: fetch GET /admin/orders, filter by status 'assigned' or 'picked', calculate how many are past ETA (order.sla.etaMax < now); display 'X orders past ETA' in red badge",
+    "Enhance Approvals in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx: add notes textarea to verify/reject action; pass notes in POST /businesses/verify {businessId, status, notes} (backend may not support notes field; if not, store client-side or skip notes persistence); 'Reveal identity' button already calls GET /admin/identity/:supplierId → display modal with shopName, GST, owner phone, address",
+    "**CORE FEATURE**: Add admin order arrangement flow to AdminOrders in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx: (a) Add 'Pending Arrangement' tab; fetch GET /admin/requests (returns orders with status 'awaiting_admin' or 'reserved', exposes wholesaler: {shopName, gst, area, address, phone} and retailer: {name, shopName, phone, area, address}); (b) Display table: Retailer | Wholesaler | Mobile | Qty | Landed Price | ETA | Actions; (c) 'Arrange Courier' button → modal with rider dropdown (fetch GET /admin/riders, filter dutyOn: true); select rider → call POST /admin/orders/:id/arrange {riderId} → order status 'assigned', shipment created; (d) Show success message: 'Courier <rider.name> assigned to pick up from <wholesaler.shopName>'",
+    "Enhance AdminOrders with order orchestration: add action column to All Orders table: Cancel button (POST /orders/:id/cancel {reason}), Refund button (placeholder alert 'Refund workflow TBD'); add status filter dropdown (all, awaiting_admin, assigned, picked, delivered, disputed, cancelled); render o.buyerId.name AND o.supplierId.shopName in table (admin privilege)",
+    "Enhance AdminStock in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx: render i.supplierId.shopName in table; add 'View IMEI' button per row (enabled only if order exists for inventoryId); on click, find orderId linked to inventoryId, call GET /admin/imei/:orderId → modal shows masked IMEI, full IMEI (decrypted, admin-only), serial, scanEvents timeline; add stock verification prompts: if lastVerifiedAt > 4 hours ago, show yellow 'Stale' badge; 'Request verification' button → PATCH /supplier/inventory/:id {verify: true} (or just display 'Verification requested' message)",
+    "Enhance Dispatch in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx: add 'Simulate match' section for pending packing orders: calculate distance from supplier to buyer (haversine formula with lat/lng or display raw coords); show recommended rider based on dutyOn: true + closest to supplier + reliability score (hardcode or use user.reliability); display match score (0-100) next to each rider in dropdown",
+    "Enhance Disputes in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend/src/pages/Admin.jsx: add action buttons per dispute: 'Approve refund' (update dispute status to 'refund_approved'; backend may need endpoint), 'Reject' (status 'rejected'), 'Escalate' (status 'escalated'); add notes textarea for each action; add status filter (open, refund_approved, rejected, escalated)"
+  ],
+  "acceptance_criteria": [
+    "Dashboard auto-refreshes every 30s; SLA monitoring card shows 'X orders past ETA'",
+    "Approvals 'Reveal identity' modal shows shopName, GST, owner phone, address; Verify button accepts notes",
+    "**CORE**: AdminOrders 'Pending Arrangement' tab shows requests with wholesaler.shopName AND retailer.name visible; 'Arrange Courier' button → select rider → POST /admin/orders/:id/arrange → order status 'assigned'; success message shows wholesaler.shopName",
+    "AdminOrders All Orders table renders o.buyerId.name AND o.supplierId.shopName; Cancel button works; status filter works",
+    "AdminStock table renders i.supplierId.shopName; 'View IMEI' button → modal shows decrypted IMEI, serial, scanEvents; Stale badge shown for old inventory",
+    "Dispatch shows recommended rider with match score; manual assign overrides recommendation",
+    "Disputes has action buttons (Approve refund, Reject, Escalate); status filter works"
+  ],
+  "verification": [
+    "Run `npm run build` in /Users/mac/freeLancing/salebysale/salebysale-admin-frontend → must exit code 0",
+    "Manual test: dashboard refreshes after 30s; SLA card shows overdue count",
+    "Manual test: buyer orders (users-frontend) → admin sees request in 'Pending Arrangement' tab with wholesaler name → Arrange Courier → select rider → request disappears, appears in All Orders with status 'assigned'; confirm wholesaler.shopName visible in UI",
+    "Manual test: AdminStock shows supplier names in table; click 'View IMEI' → modal shows decrypted IMEI",
+    "Manual test: Disputes → click 'Approve refund' → status updates to 'refund_approved'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
