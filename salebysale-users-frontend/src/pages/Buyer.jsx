@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, inr } from "../api.js";
 import { useCart } from "../CartContext.jsx";
@@ -203,6 +203,13 @@ export function BuyerOrders() {
   if (loading) return <LoadingScreen text="Loading orders…" />;
   if (error) return <div className="inline-error">{error}</div>;
 
+  // Compute KPI stats client-side
+  const totalOrders = orders.length;
+  const pendingCount = orders.filter((o) => ["reserved", "awaiting_admin"].includes(o.status)).length;
+  const inTransitCount = orders.filter((o) => ["assigned", "picked"].includes(o.status)).length;
+  const deliveredCount = orders.filter((o) => o.status === "delivered").length;
+  const totalSpend = orders.filter((o) => o.status === "delivered").reduce((s, o) => s + (o.totals?.landedPrice || 0), 0);
+
   return (
     <div className="fade-in">
       <div className="page-header">
@@ -210,16 +217,49 @@ export function BuyerOrders() {
           <h2>My Orders</h2>
           <p className="muted">{orders.length} order{orders.length !== 1 ? "s" : ""} total</p>
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ height: 40, minWidth: 160, fontSize: 14 }}
-        >
-          <option value="">All Status</option>
-          {statuses.map((st) => (
-            <option key={st} value={st}>{st.replace(/_/g, " ")}</option>
-          ))}
-        </select>
+      </div>
+
+      {/* Stats strip */}
+      {orders.length > 0 && (
+        <div className="stat-strip">
+          <div className="stat-card">
+            <div className="stat-icon">📋</div>
+            <div className="stat-value">{totalOrders}</div>
+            <div className="stat-label">Total Orders</div>
+          </div>
+          <div className="stat-card warning">
+            <div className="stat-icon">⏳</div>
+            <div className="stat-value">{pendingCount}</div>
+            <div className="stat-label">Pending</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">🚴</div>
+            <div className="stat-value">{inTransitCount}</div>
+            <div className="stat-label">In Transit</div>
+          </div>
+          <div className="stat-card success">
+            <div className="stat-icon">✅</div>
+            <div className="stat-value">{deliveredCount}</div>
+            <div className="stat-label">Delivered</div>
+          </div>
+        </div>
+      )}
+
+      {/* Pill tabs for status filtering */}
+      <div className="pill-tabs">
+        <button
+          className={`pill-tab${statusFilter === "" ? " active" : ""}`}
+          onClick={() => setStatusFilter("")}
+        >All</button>
+        {statuses.map((st) => (
+          <button
+            key={st}
+            className={`pill-tab${statusFilter === st ? " active" : ""}`}
+            onClick={() => setStatusFilter(st)}
+          >
+            {st.replace(/_/g, " ")}
+          </button>
+        ))}
       </div>
 
       {/* Empty state — no orders at all */}
@@ -283,6 +323,7 @@ export function BuyerOrder() {
   const [etaRemaining, setEtaRemaining] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [otpCopied, setOtpCopied] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -349,8 +390,8 @@ export function BuyerOrder() {
                 const done = i <= currentStep;
                 const active = i === currentStep;
                 return (
-                  <>
-                    <div key={step.key} className="stepper-step">
+                  <React.Fragment key={step.key}>
+                    <div className="stepper-step">
                       <div className={`stepper-dot${done ? " done" : ""}${active ? " active" : ""}`}>
                         {done ? "✓" : i + 1}
                       </div>
@@ -359,7 +400,7 @@ export function BuyerOrder() {
                     {i < statusSteps.length - 1 && (
                       <div className={`stepper-line${i < currentStep ? " done" : ""}`} />
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -412,6 +453,17 @@ export function BuyerOrder() {
               <div className="otp-box">
                 <div className="otp-hint">🔑 Delivery OTP — share only with rider at your door</div>
                 <div className="otp">{order.tracking.deliveryOtp}</div>
+                <button
+                  className="btn ghost small"
+                  style={{ marginTop: 10, fontSize: 13 }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.tracking.deliveryOtp);
+                    setOtpCopied(true);
+                    setTimeout(() => setOtpCopied(false), 2000);
+                  }}
+                >
+                  {otpCopied ? "✓ Copied!" : "📋 Copy OTP"}
+                </button>
               </div>
             )}
           </div>

@@ -1,38 +1,48 @@
-# Build Notes — Dashboard Redesign v2
+# Build Notes — Dashboard Redesign v2 (Review Fixes)
 
-**Build status:** ✅ `vite build` exited with code 0, 0 errors, 0 warnings.
-
-**Date:** $(date)
-
----
-
-## Files changed
-
-### `src/styles.css`
-- Appended new CSS variable extensions inside a second `:root` block (supplements, does not override, the existing root).
-- Added ~350 lines of new utility classes after the existing cart responsive rule.
-- New classes: `.page-header`, `.stat-strip`, `.stat-card`, `.section-card`, `.section-card-header`, `.section-card-body`, `.empty-state`, `.product-card` (+ sub-classes), `.search-bar`, `.pagination`, `.order-row` (+ sub-classes), `.badge` status variants, `.stepper` (+ sub-classes), `.otp-box`, `.timeline` (+ sub-classes), `.action-box`, `.supplier-order-card` (+ sub-classes), `.checklist`, `.imei-row`, `.upload-zone`, `.img-thumb-grid`, `.img-thumb`, `.form-section`, `.inv-table-wrap`, `.filter-bar`, `.payout-summary`, `.inline-success`, `.inline-error`, `.skeleton`, `.fade-in`, responsive breakpoints at 700px and 480px.
-- No existing rules were modified or removed.
-
-### `src/pages/Buyer.jsx`
-- Added `StatusBadge` and `LoadingScreen` helper components near top of file.
-- **`ProductCard`**: Replaced ad-hoc inline-styled `.card` with new `.product-card` CSS class. Same click navigation. Added `.product-card-img`, `.product-card-body`, `.product-card-brand`, `.product-card-title`, `.product-card-sub`, `.product-card-footer`, `.product-card-cta` sub-classes.
-- **`BuyerSearch`**: Wrapped in `.fade-in`. Search bar uses `.search-bar` class. Pagination uses `.pagination`/`.page-btn` classes. Loading uses `<LoadingScreen />`. Empty state uses `.empty-state`. Error uses `.inline-error`. Page header uses `.page-header`.
-- **`BuyerOrders`**: Loading state replaced with `<LoadingScreen />`. Error uses `.inline-error`. Status filter keeps `<select>`. Order list items use new `.order-row` classes. `StatusBadge` used for status display. Added separate empty-state for "no orders" vs "filtered empty". Wrapped in `.fade-in`.
-- **`BuyerOrder`**: Loading uses `<LoadingScreen />`. Error uses `.inline-error`. Progress stepper refactored to use `.stepper`, `.stepper-step`, `.stepper-dot`, `.stepper-line`, `.stepper-label` classes. Order summary and timeline wrapped in `.section-card` / `.section-card-header` / `.section-card-body`. OTP uses `.otp-box`. Timeline uses `.timeline`, `.timeline-item`, `.timeline-dot` classes. Cancel/dispute sections use `.action-box.danger-box`. All existing API calls and state logic preserved exactly.
-
-### `src/pages/Supplier.jsx`
-- Added `StatusBadge` and `LoadingScreen` helper components near top of file.
-- **`SupplierStock`**: Loading state replaced with `<LoadingScreen />`. Feedback messages use `.inline-success`/`.inline-error`. Page header uses `.page-header`. Add-product form wrapped in `.section-card` with colored header. Form internals restructured with `.form-section`, `.form-section-title`, `.upload-zone`, `.img-thumb-grid`, `.img-thumb` CSS classes (replaces all ad-hoc inline styles). Inventory wrapped in `.section-card`; empty state uses `.empty-state`; table wrapped in `.inv-table-wrap`. All state and API calls unchanged.
-- **`OrderCard`**: Replaced `.card` wrapper with `.supplier-order-card`. Header uses `.supplier-order-card-header`, `.soc-product`, `.soc-payout`, `.soc-timer`. Checklist uses `.checklist` class. IMEI row uses `.imei-row`. All state, timer effect, handleAccept, handleReject, handlePack, handlePhotoChange unchanged.
-- **`SupplierOrders`**: Loading uses `<LoadingScreen />`. Error uses `.inline-error`. Empty state uses `.empty-state`. Page header uses `.page-header`. All state and load logic unchanged.
-- **`SupplierPayouts`**: Loading uses `<LoadingScreen />`. Error uses `.inline-error`. Added payout summary strip with `.payout-summary` / `.payout-summary-item`. Status filter wrapped in `.filter-bar`. Settlements table wrapped in `.section-card`. Empty state uses `.empty-state`. `StatusBadge` used in table. `totalEarned`/`totalPending` computed client-side from existing `allRows` data. All state and API calls unchanged.
+**Build status:** ✅ Passed (exit code 0)
+**Build time:** ~532ms
+**Bundle:** `dist/assets/index-*.js` 369.55 kB (114 kB gzip)
 
 ---
 
-## Behavior preservation
-- Every API call is unchanged.
-- Every state variable and effect is unchanged.
-- All form fields, validation, and submit handlers are unchanged.
-- Layout.jsx sidebar untouched — pages still render inside `<main className="main">`.
-- No new npm packages were added.
+## Review Findings Fixed
+
+All 5 findings from `review-v2.json` resolved:
+
+### Finding 1 — Stats strip absent from BuyerOrders & SupplierStock
+- Added a 4-card `.stat-strip` to `BuyerOrders`: Total Orders, Pending, In Transit, Delivered — all computed client-side from the `orders` array already fetched.
+- Added a 4-card `.stat-strip` to `SupplierStock`: Total Products, Active (ON), Total Reserved, Total Available — computed from `inventory` array.
+- Stats strip renders only when there is at least one item (hidden for empty state).
+
+### Finding 2 — Status filter is `<select>`, not pill tabs
+- `BuyerOrders`: Removed the `<select>` from the page-header. Replaced with a `.pill-tabs` row rendering All + 7 status options as `.pill-tab` buttons.
+- `SupplierPayouts`: Removed the `.filter-bar` + `<select>`. Replaced with `.pill-tabs` row for All / Eligible / Paid / Pending.
+- Added `.pill-tabs` and `.pill-tab` CSS classes to `styles.css` (append-only).
+
+### Finding 3 — OTP copy-to-clipboard missing
+- Added `otpCopied` state to `BuyerOrder`.
+- Added a "📋 Copy OTP" button inside `.otp-box` that calls `navigator.clipboard.writeText(order.tracking.deliveryOtp)`.
+- Button text changes to "✓ Copied!" for 2 seconds then resets (via `setTimeout`).
+
+### Finding 4 — Pulse animation absent from active stepper dot
+- Updated `.stepper-dot.active` in `styles.css` to include `animation: pulse 1.5s ease-in-out infinite` (reuses the existing `@keyframes pulse` defined for `.skeleton`).
+- Also fixed a React key warning: moved `key={step.key}` from the inner `<div>` to the wrapping `React.Fragment`, and added `import React` to support explicit `React.Fragment` usage.
+
+### Finding 5 — Add Product form expands inline, not slide-in panel
+- Replaced the inline `.section-card` conditional block in `SupplierStock` with a portal-style slide-in panel: `<div className="slide-panel-backdrop">` + `<div className="slide-panel">`.
+- Panel slides in from the right with a `@keyframes slideInRight` CSS animation (added to `styles.css`).
+- Clicking the backdrop closes the panel. All form fields, logic, and `saveProduct` handler are 100% unchanged.
+- Added `.slide-panel-backdrop` and `.slide-panel` CSS classes to `styles.css`.
+
+---
+
+## Files Changed
+
+| File | Change |
+|---|---|
+| `src/pages/Buyer.jsx` | Stats strip in BuyerOrders; pill tabs replacing `<select>`; OTP copy button; React.Fragment key fix; `import React` added |
+| `src/pages/Supplier.jsx` | Stats strip in SupplierStock; slide-in panel for Add Product form; pill tabs replacing `<select>` in SupplierPayouts |
+| `src/styles.css` | Added `.pill-tabs`, `.pill-tab`, `.slide-panel-backdrop`, `.slide-panel`, `@keyframes slideInRight`; updated `.stepper-dot.active` to include pulse animation |
+
+All existing API calls, state, exports, and logic are unchanged.

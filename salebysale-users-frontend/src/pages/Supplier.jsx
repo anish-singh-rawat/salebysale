@@ -161,6 +161,11 @@ export function SupplierStock() {
 
   if (loading) return <LoadingScreen text="Loading your inventory…" />;
 
+  // Compute KPI stats client-side
+  const activeCount = inventory.filter((r) => r.status === "ON").length;
+  const totalReserved = inventory.reduce((s, r) => s + (r.reservedQty || 0), 0);
+  const totalAvailable = inventory.reduce((s, r) => s + (r.availableQty || 0), 0);
+
   return (
     <div className="fade-in">
       {/* Page header */}
@@ -181,13 +186,51 @@ export function SupplierStock() {
       {msg   && <div className="inline-success" style={{ marginBottom: 14 }}>{msg}</div>}
       {error && <div className="inline-error"   style={{ marginBottom: 14 }}>{error}</div>}
 
-      {/* Add product form */}
-      {showAddForm && (
-        <div className="section-card" style={{ marginBottom: 24, borderColor: "var(--primary)", borderWidth: 2 }}>
-          <div className="section-card-header" style={{ background: "var(--primary-light)" }}>
-            <h3 style={{ color: "var(--primary)" }}>➕ Add New Mobile Phone</h3>
+      {/* Stats strip */}
+      {inventory.length > 0 && (
+        <div className="stat-strip">
+          <div className="stat-card">
+            <div className="stat-icon">📦</div>
+            <div className="stat-value">{inventory.length}</div>
+            <div className="stat-label">Total Products</div>
           </div>
-          <div className="section-card-body">
+          <div className="stat-card success">
+            <div className="stat-icon">✅</div>
+            <div className="stat-value">{activeCount}</div>
+            <div className="stat-label">Active (ON)</div>
+          </div>
+          <div className="stat-card warning">
+            <div className="stat-icon">🔒</div>
+            <div className="stat-value">{totalReserved}</div>
+            <div className="stat-label">Reserved</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">🟢</div>
+            <div className="stat-value">{totalAvailable}</div>
+            <div className="stat-label">Available</div>
+          </div>
+        </div>
+      )}
+
+      {/* Add product slide-in panel */}
+      {showAddForm && (
+        <>
+          <div
+            className="slide-panel-backdrop"
+            onClick={() => { setShowAddForm(false); setImages([]); setPrimaryImageIndex(0); setError(""); setMsg(""); }}
+          />
+          <div className="slide-panel">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: "var(--primary)" }}>➕ Add New Mobile Phone</h3>
+              <button
+                className="btn ghost small"
+                onClick={() => { setShowAddForm(false); setImages([]); setPrimaryImageIndex(0); setError(""); setMsg(""); }}
+              >✕</button>
+            </div>
+
+            {msg   && <div className="inline-success" style={{ marginBottom: 14 }}>{msg}</div>}
+            {error && <div className="inline-error"   style={{ marginBottom: 14 }}>{error}</div>}
+
             <form onSubmit={saveProduct}>
 
               {/* Section 1: Phone details */}
@@ -315,7 +358,7 @@ export function SupplierStock() {
               </div>
             </form>
           </div>
-        </div>
+        </>
       )}
 
       {/* Inventory table */}
@@ -622,16 +665,16 @@ export function SupplierPayouts() {
       </div>
 
       {/* Filter */}
-      <div className="filter-bar">
-        <label>
-          Filter by status:
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">All</option>
-            <option value="eligible">Eligible</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-          </select>
-        </label>
+      <div className="pill-tabs">
+        {["all", "eligible", "paid", "pending"].map((st) => (
+          <button
+            key={st}
+            className={`pill-tab${statusFilter === st ? " active" : ""}`}
+            onClick={() => setStatusFilter(st)}
+          >
+            {st === "all" ? "All" : st.charAt(0).toUpperCase() + st.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Table */}
