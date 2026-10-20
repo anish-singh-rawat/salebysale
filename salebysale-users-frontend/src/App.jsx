@@ -5,6 +5,8 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Layout from "./pages/Layout.jsx";
 import { BuyerOrder, BuyerOrders, BuyerSearch } from "./pages/Buyer.jsx";
+import ProductDetail from "./pages/ProductDetail.jsx";
+import Cart from "./pages/Cart.jsx";
 import { SupplierOrders, SupplierPayouts, SupplierStock } from "./pages/Supplier.jsx";
 import Rider from "./pages/Rider.jsx";
 import { AdminOrders, AdminStock, Approvals, Dashboard, Dispatch, Disputes } from "./pages/Admin.jsx";
@@ -44,6 +46,8 @@ export default function App() {
       >
         <Route index element={<RoleHome />} />
         <Route path="search" element={<BuyerSearch />} />
+        <Route path="product/:skuId" element={<ProductDetail />} />
+        <Route path="cart" element={<Cart />} />
         <Route path="orders" element={<BuyerOrders />} />
         <Route path="orders/:id" element={<BuyerOrder />} />
         <Route path="stock" element={<SupplierStock />} />

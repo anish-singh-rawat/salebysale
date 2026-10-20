@@ -172,3 +172,17 @@ tr:hover { background: var(--bg2); }
   to { transform: rotate(360deg); } 
 }
 
+
+/* Product detail responsive */
+@media (max-width: 700px) {
+  .product-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Cart page responsive */
+@media (max-width: 700px) {
+  .cart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

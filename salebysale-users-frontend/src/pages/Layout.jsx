@@ -4,8 +4,9 @@ import { useCart } from "../CartContext.jsx";
 
 const menus = {
   buyer: [
-    ["Search stock", "/app/search"],
-    ["My orders", "/app/orders"],
+    ["Browse Products", "/app/search"],
+    ["Cart", "/app/cart"],
+    ["My Orders", "/app/orders"],
   ],
   supplier: [
     ["Inventory", "/app/stock"],
@@ -29,7 +30,7 @@ export default function Layout() {
   const { user, business, logout } = useAuth();
   const navigate = useNavigate();
   const items = menus[user?.role] || [];
-  const { cart } = useCart();
+  const { cart, totalItems } = useCart();
 
   return (
     <div className="layout">
@@ -45,9 +46,23 @@ export default function Layout() {
           {items.map(([label, to]) => (
             <NavLink key={to} to={to} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span>{label}</span>
-              {to === "/app/search" && cart.length > 0 && (
-                <span className="badge" style={{ marginLeft: 8 }}>
-                  {cart.length}
+              {to === "/app/cart" && totalItems > 0 && (
+                <span
+                  style={{
+                    background: "var(--danger)",
+                    color: "#fff",
+                    borderRadius: "50%",
+                    width: 20,
+                    height: 20,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {totalItems}
                 </span>
               )}
             </NavLink>
