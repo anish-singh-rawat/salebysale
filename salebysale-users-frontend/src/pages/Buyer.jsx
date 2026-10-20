@@ -5,6 +5,62 @@ import { useCart } from "../CartContext.jsx";
 
 const PAGE_SIZE = 20;
 
+/* ─── Shared helpers ────────────────────────────────────── */
+
+const STATUS_CLASS = {
+  delivered: "status-delivered",
+  reserved: "status-reserved",
+  awaiting_admin: "status-awaiting_admin",
+  assigned: "status-assigned",
+  picked: "status-picked",
+  cancelled: "status-cancelled",
+  disputed: "status-disputed",
+};
+
+function StatusBadge({ status }) {
+  return (
+    <span className={`badge ${STATUS_CLASS[status] || ""}`}>
+      {status?.replace(/_/g, " ")}
+    </span>
+  );
+}
+
+function LoadingScreen({ text = "Loading…" }) {
+  return (
+    <div style={{ padding: "60px 0", textAlign: "center" }}>
+      <div className="spinner" style={{ margin: "0 auto 14px" }} />
+      <p className="muted">{text}</p>
+    </div>
+  );
+}
+
+/* ─── ProductCard ───────────────────────────────────────── */
+function ProductCard({ sku }) {
+  const navigate = useNavigate();
+  return (
+    <div className="product-card" onClick={() => navigate(`/app/product/${sku._id}`)}>
+      <div className="product-card-img">📱</div>
+      <div className="product-card-body">
+        <div className="product-card-brand">{sku.brand}</div>
+        <div className="product-card-title">{sku.model}</div>
+        <div className="product-card-sub">{[sku.variant, sku.color].filter(Boolean).join(" · ")}</div>
+        {sku.warranty && (
+          <span style={{
+            display: "inline-block", fontSize: 11, padding: "2px 9px",
+            borderRadius: 999, background: "var(--primary-light)", color: "var(--primary)",
+            fontWeight: 600, alignSelf: "flex-start", marginTop: 4,
+          }}>
+            {sku.warranty}
+          </span>
+        )}
+        <div className="product-card-footer">
+          <span className="product-card-cta">View details →</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── BuyerSearch ───────────────────────────────────────── */
 export function BuyerSearch() {
   const [q, setQ] = useState("");
@@ -46,195 +102,78 @@ export function BuyerSearch() {
   }, [q, page]);
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+    <div className="fade-in">
+      {/* Page header */}
+      <div className="page-header">
         <div>
-          <h2 style={{ marginBottom: 4 }}>Browse Products</h2>
-          <p className="muted">Verified listings. Supplier identity stays private.</p>
+          <h2>Browse Products</h2>
+          <p className="muted">Verified listings · Supplier identity stays private</p>
         </div>
         {totalItems > 0 && (
           <button className="btn small" onClick={() => navigate("/app/cart")} style={{ position: "relative" }}>
             🛒 Cart
-            <span
-              style={{
-                position: "absolute",
-                top: -6,
-                right: -6,
-                background: "var(--danger)",
-                color: "#fff",
-                borderRadius: "50%",
-                width: 18,
-                height: 18,
-                fontSize: 11,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <span style={{
+              position: "absolute", top: -6, right: -6,
+              background: "var(--danger)", color: "#fff",
+              borderRadius: "50%", width: 18, height: 18,
+              fontSize: 11, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
               {totalItems}
             </span>
           </button>
         )}
       </div>
 
-      {error && <div className="alert" style={{ marginBottom: 12 }}>{error}</div>}
+      {error && <div className="inline-error" style={{ marginBottom: 14 }}>{error}</div>}
 
       {/* Search bar */}
-      <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, margin: "16px 0" }}>
+      <form onSubmit={handleSearch} className="search-bar">
         <input
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
           placeholder="Search brand, model, color…"
-          style={{ flex: 1 }}
         />
         <button className="btn" type="submit">Search</button>
         {q && (
-          <button
-            className="btn ghost"
-            type="button"
-            onClick={() => { setInputVal(""); setQ(""); setPage(1); }}
-          >
-            Clear
+          <button className="btn ghost" type="button" onClick={() => { setInputVal(""); setQ(""); setPage(1); }}>
+            ✕ Clear
           </button>
         )}
       </form>
 
       {/* Results count */}
       {!loading && (
-        <p className="muted" style={{ marginBottom: 12 }}>
+        <p className="muted" style={{ marginBottom: 16, fontSize: 14 }}>
           {total} product{total !== 1 ? "s" : ""}{q ? ` for "${q}"` : ""}
         </p>
       )}
 
-      {/* Product grid */}
+      {/* Grid / empty / loading */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px 0" }}>
-          <div className="spinner" style={{ margin: "0 auto 12px" }} />
-          <p className="muted">Loading products…</p>
-        </div>
+        <LoadingScreen text="Loading products…" />
       ) : skus.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0" }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
-          <p className="muted">No products found{q ? ` for "${q}"` : ""}.</p>
+        <div className="empty-state">
+          <div className="empty-icon">📦</div>
+          <h4>No products found</h4>
+          <p>{q ? `No results for "${q}"` : "Check back soon for new listings."}</p>
         </div>
       ) : (
         <div className="grid cols-3" style={{ gap: 16 }}>
-          {skus.map((s) => (
-            <ProductCard key={s._id} sku={s} />
-          ))}
+          {skus.map((s) => <ProductCard key={s._id} sku={s} />)}
         </div>
       )}
 
       {/* Pagination */}
       {pages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 24 }}>
-          <button className="btn ghost small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-            ← Prev
-          </button>
+        <div className="pagination">
+          <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Prev</button>
           {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              className={`btn small${p === page ? "" : " ghost"}`}
-              onClick={() => setPage(p)}
-              style={{ minWidth: 36 }}
-            >
-              {p}
-            </button>
+            <button key={p} className={`page-btn${p === page ? " active" : ""}`} onClick={() => setPage(p)}>{p}</button>
           ))}
-          <button className="btn ghost small" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>
-            Next →
-          </button>
+          <button className="page-btn" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next →</button>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ─── ProductCard ───────────────────────────────────────── */
-function ProductCard({ sku }) {
-  const navigate = useNavigate();
-  return (
-    <div
-      onClick={() => navigate(`/app/product/${sku._id}`)}
-      className="card"
-      style={{
-        padding: 0,
-        overflow: "hidden",
-        cursor: "pointer",
-        transition: "box-shadow 0.15s, transform 0.15s",
-        display: "flex",
-        flexDirection: "column",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 8px 24px rgba(37,99,235,0.15)";
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "";
-        e.currentTarget.style.transform = "";
-      }}
-    >
-      {/* Image area */}
-      <div
-        style={{
-          width: "100%",
-          height: 160,
-          background: "linear-gradient(135deg, #eff6ff, #f1f5f9)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 56,
-        }}
-      >
-        📱
-      </div>
-
-      <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-          {sku.brand}
-        </div>
-        <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text)", lineHeight: 1.3 }}>
-          {sku.model}
-        </div>
-        <div className="muted" style={{ fontSize: 13 }}>
-          {[sku.variant, sku.color].filter(Boolean).join(" · ")}
-        </div>
-
-        {sku.warranty && (
-          <span
-            style={{
-              display: "inline-block",
-              fontSize: 11,
-              padding: "2px 8px",
-              borderRadius: 999,
-              background: "var(--primary-light)",
-              color: "var(--primary)",
-              fontWeight: 600,
-              alignSelf: "flex-start",
-              marginTop: 2,
-            }}
-          >
-            {sku.warranty}
-          </span>
-        )}
-
-        <div
-          style={{
-            marginTop: "auto",
-            paddingTop: 10,
-            fontSize: 13,
-            color: "var(--primary)",
-            fontWeight: 700,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          View details →
-        </div>
-      </div>
     </div>
   );
 }
@@ -261,87 +200,67 @@ export function BuyerOrders() {
 
   const statuses = ["reserved", "awaiting_admin", "assigned", "picked", "delivered", "disputed", "cancelled"];
 
-  if (loading) return <p>Loading…</p>;
-  if (error) return <div className="alert">{error}</div>;
-  if (orders.length === 0) return (
-    <div style={{ textAlign: "center", padding: "60px 0" }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
-      <p className="muted" style={{ marginBottom: 16 }}>No orders yet</p>
-      <Link to="/app/search" className="btn">Browse Products</Link>
-    </div>
-  );
+  if (loading) return <LoadingScreen text="Loading orders…" />;
+  if (error) return <div className="inline-error">{error}</div>;
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h2>My Orders</h2>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+    <div className="fade-in">
+      <div className="page-header">
+        <div>
+          <h2>My Orders</h2>
+          <p className="muted">{orders.length} order{orders.length !== 1 ? "s" : ""} total</p>
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{ height: 40, minWidth: 160, fontSize: 14 }}
+        >
           <option value="">All Status</option>
-          {statuses.map((st) => <option key={st} value={st}>{st}</option>)}
+          {statuses.map((st) => (
+            <option key={st} value={st}>{st.replace(/_/g, " ")}</option>
+          ))}
         </select>
       </div>
+
+      {/* Empty state — no orders at all */}
+      {orders.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">📋</div>
+          <h4>No orders yet</h4>
+          <p>Find something you like and place your first order.</p>
+          <Link to="/app/search" className="btn">Browse Products</Link>
+        </div>
+      )}
+
+      {/* Empty after filter */}
+      {orders.length > 0 && filteredOrders.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">🔍</div>
+          <h4>No orders match this filter</h4>
+          <p>
+            <button className="btn ghost small" onClick={() => setStatusFilter("")}>Clear filter</button>
+          </p>
+        </div>
+      )}
+
+      {/* Orders list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {filteredOrders.map((o) => {
           const sku = o.items?.[0]?.skuId;
-          const statusColors = {
-            delivered: "#10b981", reserved: "#f59e0b", awaiting_admin: "#3b82f6",
-            assigned: "#8b5cf6", picked: "#ec4899", cancelled: "#ef4444", disputed: "#ef4444",
-          };
           return (
-            <div
-              key={o._id}
-              style={{
-                display: "flex",
-                gap: 16,
-                padding: 16,
-                background: "var(--card)",
-                border: "1px solid var(--line)",
-                borderRadius: 10,
-                alignItems: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8,
-                  background: "#f1f5f9",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  flexShrink: 0,
-                }}
-              >
-                📱
+            <div key={o._id} className="order-row">
+              <div className="order-row-icon">📱</div>
+              <div className="order-row-info">
+                <div className="order-row-title">{sku?.brand} {sku?.model} {sku?.color}</div>
+                <div className="order-row-meta">Order #{o._id.slice(-8).toUpperCase()}</div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>
-                  {sku?.brand} {sku?.model} {sku?.color}
-                </div>
-                <div className="tiny">Order #{o._id.slice(-8).toUpperCase()}</div>
-              </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontWeight: 700, color: "var(--primary)", marginBottom: 4 }}>
-                  {inr(o.totals?.landedPrice)}
-                </div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "2px 8px",
-                    borderRadius: 999,
-                    background: `${statusColors[o.status] || "#6b7280"}22`,
-                    color: statusColors[o.status] || "#6b7280",
-                  }}
-                >
-                  {o.status}
-                </span>
+              <div className="order-row-right">
+                <div className="order-row-price">{inr(o.totals?.landedPrice)}</div>
+                <StatusBadge status={o.status} />
               </div>
               <Link
                 to={`/app/orders/${o._id}`}
                 className="btn ghost small"
-                style={{ flexShrink: 0 }}
                 onClick={(e) => e.stopPropagation()}
               >
                 Track →
@@ -393,8 +312,8 @@ export function BuyerOrder() {
     }
   }, [order]);
 
-  if (loading) return <div style={{ padding: "40px 0", textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto" }} /></div>;
-  if (error) return <div className="alert">{error}</div>;
+  if (loading) return <LoadingScreen text="Loading order…" />;
+  if (error) return <div className="inline-error">{error}</div>;
   if (!order) return <p className="muted">Order not found</p>;
 
   const sku = order.items?.[0]?.skuId;
@@ -410,230 +329,159 @@ export function BuyerOrder() {
   const currentStep = statusSteps.findIndex((s) => s.key === order.status);
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-        <Link to="/app/orders" className="btn ghost small">← Orders</Link>
-        <h2 style={{ margin: 0 }}>Order #{id.slice(-8).toUpperCase()}</h2>
+    <div className="fade-in">
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
+        <Link to="/app/orders" className="btn ghost small">← Back to Orders</Link>
+        <h2 style={{ margin: 0, fontSize: 18 }}>Order #{id.slice(-8).toUpperCase()}</h2>
       </div>
 
       {/* Progress stepper */}
       {!["cancelled", "disputed"].includes(order.status) && (
-        <div
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--line)",
-            borderRadius: 10,
-            padding: "20px 24px",
-            marginBottom: 20,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-            {statusSteps.map((step, i) => {
-              const done = i <= currentStep;
-              const active = i === currentStep;
-              return (
-                <div key={step.key} style={{ display: "flex", alignItems: "center", flex: i < statusSteps.length - 1 ? 1 : 0 }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        background: done ? "var(--primary)" : "var(--bg2)",
-                        border: `2px solid ${done ? "var(--primary)" : "var(--line)"}`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: done ? "#fff" : "var(--muted)",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        boxShadow: active ? "0 0 0 4px var(--primary-light)" : "none",
-                      }}
-                    >
-                      {done ? "✓" : i + 1}
+        <div className="section-card" style={{ marginBottom: 20 }}>
+          <div className="section-card-header">
+            <h3>📦 Order Progress</h3>
+            <StatusBadge status={order.status} />
+          </div>
+          <div className="section-card-body">
+            <div className="stepper">
+              {statusSteps.map((step, i) => {
+                const done = i <= currentStep;
+                const active = i === currentStep;
+                return (
+                  <>
+                    <div key={step.key} className="stepper-step">
+                      <div className={`stepper-dot${done ? " done" : ""}${active ? " active" : ""}`}>
+                        {done ? "✓" : i + 1}
+                      </div>
+                      <div className={`stepper-label${done ? " done" : ""}`}>{step.label}</div>
                     </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: active ? 700 : 400,
-                        color: done ? "var(--primary)" : "var(--muted)",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {step.label}
-                    </div>
-                  </div>
-                  {i < statusSteps.length - 1 && (
-                    <div
-                      style={{
-                        flex: 1,
-                        height: 2,
-                        background: i < currentStep ? "var(--primary)" : "var(--line)",
-                        margin: "0 4px",
-                        marginBottom: 20,
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                    {i < statusSteps.length - 1 && (
+                      <div className={`stepper-line${i < currentStep ? " done" : ""}`} />
+                    )}
+                  </>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
 
+      {/* Two-column detail grid */}
       <div className="grid cols-2" style={{ gap: 20 }}>
-        {/* Order summary */}
-        <div className="card">
-          <div
-            style={{
-              display: "inline-block",
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "2px 10px",
-              borderRadius: 999,
-              background: "var(--primary-light)",
-              color: "var(--primary)",
-              marginBottom: 10,
-            }}
-          >
-            SELL BY SELL verified stock
+        {/* Left: Order summary */}
+        <div className="section-card">
+          <div className="section-card-header">
+            <h3>📱 Product Summary</h3>
+            <span style={{
+              fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 999,
+              background: "var(--primary-light)", color: "var(--primary)",
+            }}>
+              SBS Verified
+            </span>
           </div>
-          <h2 style={{ margin: "0 0 4px" }}>
-            {sku?.brand} {sku?.model}
-          </h2>
-          <p className="muted" style={{ margin: "0 0 16px" }}>
-            {[sku?.variant, sku?.color].filter(Boolean).join(" · ")}
-          </p>
-          <ul className="stat-list">
-            <li><span>Total Paid</span><strong style={{ color: "var(--primary)", fontSize: 18 }}>{inr(order.totals?.landedPrice)}</strong></li>
-            <li><span>ETA Band</span><strong>{order.sla?.etaMin}–{order.sla?.etaMax} min</strong></li>
-            <li><span>Status</span>
-              <strong>
-                <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: order.status === "delivered" ? "var(--success)" : "var(--warning)", marginRight: 6 }} />
-                {order.status}
-              </strong>
-            </li>
-            {etaRemaining !== null && (
-              <li><span>ETA Remaining</span><strong>{etaRemaining} min</strong></li>
-            )}
-          </ul>
+          <div className="section-card-body">
+            <h3 style={{ margin: "0 0 4px" }}>{sku?.brand} {sku?.model}</h3>
+            <p className="muted" style={{ margin: "0 0 18px" }}>{[sku?.variant, sku?.color].filter(Boolean).join(" · ")}</p>
+            <ul className="stat-list">
+              <li>
+                <span>Total Paid</span>
+                <strong style={{ color: "var(--primary)", fontSize: 18 }}>{inr(order.totals?.landedPrice)}</strong>
+              </li>
+              <li>
+                <span>ETA Band</span>
+                <strong>{order.sla?.etaMin}–{order.sla?.etaMax} min</strong>
+              </li>
+              <li>
+                <span>Status</span>
+                <strong>
+                  <span style={{
+                    display: "inline-block", width: 8, height: 8, borderRadius: "50%",
+                    background: order.status === "delivered" ? "var(--success)" : "var(--warning)",
+                    marginRight: 6,
+                  }} />
+                  {order.status?.replace(/_/g, " ")}
+                </strong>
+              </li>
+              {etaRemaining !== null && (
+                <li><span>ETA Remaining</span><strong>{etaRemaining} min</strong></li>
+              )}
+            </ul>
 
-          {order.tracking?.deliveryOtp && (
-            <div
-              style={{
-                marginTop: 16,
-                padding: "14px 16px",
-                background: "var(--primary-light)",
-                borderRadius: 8,
-                textAlign: "center",
-              }}
-            >
-              <div className="tiny" style={{ marginBottom: 4 }}>
-                🔑 Delivery OTP — share only with rider at your door
+            {order.tracking?.deliveryOtp && (
+              <div className="otp-box">
+                <div className="otp-hint">🔑 Delivery OTP — share only with rider at your door</div>
+                <div className="otp">{order.tracking.deliveryOtp}</div>
               </div>
-              <div className="otp">{order.tracking.deliveryOtp}</div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Timeline + actions */}
-        <div className="card">
-          <h3 style={{ margin: "0 0 16px" }}>Timeline</h3>
-          <div style={{ borderLeft: "2px solid var(--primary-light)", paddingLeft: 16, marginLeft: 8 }}>
-            {(order.events || []).map((e, i) => (
-              <div key={i} style={{ position: "relative", marginBottom: 16 }}>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: -22,
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    background: "var(--primary)",
-                    border: "2px solid var(--bg)",
-                  }}
-                />
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{e.name.replace(/([a-z])([A-Z])/g, "$1 $2")}</div>
-                <div className="tiny">{new Date(e.at).toLocaleString()}</div>
-                {e.note && <div className="tiny" style={{ marginTop: 2, color: "var(--text)" }}>{e.note}</div>}
-              </div>
-            ))}
-          </div>
+        {/* Right: Timeline + actions */}
+        <div className="section-card">
+          <div className="section-card-header"><h3>🕐 Timeline</h3></div>
+          <div className="section-card-body">
+            <div className="timeline">
+              {(order.events || []).map((e, i) => (
+                <div key={i} className="timeline-item">
+                  <div className="timeline-dot" />
+                  <div className="timeline-name">{e.name.replace(/([a-z])([A-Z])/g, "$1 $2")}</div>
+                  <div className="timeline-time">{new Date(e.at).toLocaleString()}</div>
+                  {e.note && <div className="timeline-note">{e.note}</div>}
+                </div>
+              ))}
+            </div>
 
-          {canCancel && (
-            <div
-              style={{
-                marginTop: 20,
-                padding: 14,
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: 8,
-              }}
-            >
-              <h4 style={{ margin: "0 0 8px", color: "var(--danger)", fontSize: 14 }}>Cancel Order</h4>
-              <input
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Reason for cancellation"
-                style={{ marginBottom: 8 }}
-              />
+            {canCancel && (
+              <div className="action-box danger-box">
+                <h4 style={{ color: "var(--danger)" }}>Cancel Order</h4>
+                <input
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Reason for cancellation"
+                />
+                <button
+                  className="btn danger small"
+                  onClick={async () => {
+                    try {
+                      await api(`/orders/${id}/cancel`, { method: "POST", body: { reason: cancelReason } });
+                      setMsg("Order cancelled successfully");
+                      load();
+                    } catch (err) {
+                      setMsg(`Error: ${err.message}`);
+                    }
+                  }}
+                >
+                  Cancel Order
+                </button>
+              </div>
+            )}
+
+            <div className="action-box danger-box">
+              <h4 style={{ color: "var(--danger)" }}>Raise Dispute</h4>
+              <input value={reason} onChange={(e) => setReason(e.target.value)} />
               <button
                 className="btn danger small"
                 onClick={async () => {
                   try {
-                    await api(`/orders/${id}/cancel`, { method: "POST", body: { reason: cancelReason } });
-                    setMsg("Order cancelled successfully");
+                    await api(`/orders/${id}/dispute`, { method: "POST", body: { reason } });
+                    setMsg("Dispute opened — admin will review shortly.");
                     load();
                   } catch (err) {
                     setMsg(`Error: ${err.message}`);
                   }
                 }}
               >
-                Cancel Order
+                Open Dispute
               </button>
             </div>
-          )}
 
-          <div
-            style={{
-              marginTop: 16,
-              padding: 14,
-              background: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: 8,
-            }}
-          >
-            <h4 style={{ margin: "0 0 8px", color: "var(--danger)", fontSize: 14 }}>Raise Dispute</h4>
-            <input
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              style={{ marginBottom: 8 }}
-            />
-            <button
-              className="btn danger small"
-              onClick={async () => {
-                try {
-                  await api(`/orders/${id}/dispute`, { method: "POST", body: { reason } });
-                  setMsg("Dispute opened — admin will review shortly.");
-                  load();
-                } catch (err) {
-                  setMsg(`Error: ${err.message}`);
-                }
-              }}
-            >
-              Open Dispute
-            </button>
+            {msg && (
+              <div className={msg.startsWith("Error") ? "inline-error" : "inline-success"} style={{ marginTop: 12 }}>
+                {msg}
+              </div>
+            )}
           </div>
-
-          {msg && (
-            <div
-              className={msg.startsWith("Error") ? "alert" : "ok"}
-              style={{ marginTop: 12 }}
-            >
-              {msg}
-            </div>
-          )}
         </div>
       </div>
     </div>
