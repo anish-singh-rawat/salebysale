@@ -469,6 +469,7 @@ export function AdminStock() {
       <table>
         <thead>
           <tr>
+            <th>Image</th>
             <th>Supplier</th>
             <th>SKU</th>
             <th>Avail</th>
@@ -484,6 +485,18 @@ export function AdminStock() {
             const stale = isStale(i.lastVerifiedAt);
             return (
               <tr key={i._id}>
+                <td>
+                  {i.primaryImage ? (
+                    <img 
+                      src={i.primaryImage} 
+                      alt="Product" 
+                      style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "4px", cursor: "pointer" }} 
+                      onClick={() => window.open(i.primaryImage)}
+                    />
+                  ) : (
+                    <span className="muted tiny">No image</span>
+                  )}
+                </td>
                 <td><strong>{i.supplierId?.shopName}</strong></td>
                 <td>
                   {i.skuId?.brand} {i.skuId?.model} {i.skuId?.color}

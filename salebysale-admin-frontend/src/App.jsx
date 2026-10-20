@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
-import Register from "./pages/Register.jsx";
 import Layout from "./pages/Layout.jsx";
 import { AdminOrders, AdminStock, Approvals, Dashboard, Dispatch, Disputes } from "./pages/Admin.jsx";
 
@@ -27,7 +26,6 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
       <Route
         path="/app"
         element={

@@ -44,7 +44,6 @@ export default function Register() {
               <select value={form.role} onChange={set("role")}>
                 <option value="buyer">Buyer retailer</option>
                 <option value="supplier">Supplier shop</option>
-                <option value="rider">Rider</option>
               </select>
             </label>
             <div className="grid cols-2">
