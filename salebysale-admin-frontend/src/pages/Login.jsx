@@ -2,18 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
 
-const demos = [
-  ["Admin", "admin@sellbysell.com"],
-  ["Supplier · Shiv Ganga", "supplier1@sellbysell.com"],
-  ["Buyer retailer", "buyer@sellbysell.com"],
-  ["Rider", "rider@sellbysell.com"],
-];
-
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("buyer@sellbysell.com");
-  const [password, setPassword] = useState("Demo@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   async function onSubmit(e) {
@@ -35,29 +28,34 @@ export default function Login() {
           <div className="mark">S</div> SELL BY SELL
         </Link>
         <div className="card">
-          <h2>Sign in</h2>
-          <p className="muted">Prepaid verified network — Haridwar pilot.</p>
+          <h2>Admin Panel Login</h2>
+          <p className="muted">Authorized personnel only — SaleBySale Management.</p>
           {error && <div className="alert">{error}</div>}
           <form className="form" onSubmit={onSubmit}>
             <label>
               Email
-              <input value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="admin@salebysale.com"
+                required
+              />
             </label>
             <label>
               Password
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="Enter your password"
+                required
+              />
             </label>
             <button className="btn" type="submit">
-              Enter network
+              Login to Admin Panel
             </button>
           </form>
-          <div className="grid" style={{ marginTop: 16 }}>
-            {demos.map(([label, mail]) => (
-              <button key={mail} className="btn ghost small" type="button" onClick={() => setEmail(mail)}>
-                {label}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>
