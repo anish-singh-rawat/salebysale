@@ -25,11 +25,11 @@ export default function Login() {
     <div className="hero-bg">
       <div className="wrap" style={{ maxWidth: 480 }}>
         <Link to="/" className="brand" style={{ margin: "32px 0" }}>
-          <div className="mark">S</div> SELL BY SELL
+          <div className="mark">S</div> SaleBySale
         </Link>
         <div className="card">
           <h2>Sign in</h2>
-          <p className="muted">Prepaid verified network — Haridwar pilot.</p>
+          <p className="muted">Access your account</p>
           {error && <div className="alert">{error}</div>}
           <form className="form" onSubmit={onSubmit}>
             <label>
@@ -41,7 +41,7 @@ export default function Login() {
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </label>
             <button className="btn" type="submit">
-              Login
+              Sign In
             </button>
           </form>
         </div>

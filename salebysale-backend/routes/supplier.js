@@ -18,7 +18,7 @@ router.get("/inventory", auth, allow("supplier"), async (req, res) => {
 });
 
 router.post("/inventory", auth, allow("supplier"), async (req, res) => {
-  const { skuId, availableQty, minimumPrice, readyInMinutes, status } = req.body;
+  const { skuId, availableQty, minimumPrice, readyInMinutes, status, images, primaryImage } = req.body;
   const sku = await Sku.findById(skuId);
   if (!sku) return res.status(404).json({ success: false, message: "SKU not found" });
   const row = await Inventory.findOneAndUpdate(
@@ -28,6 +28,8 @@ router.post("/inventory", auth, allow("supplier"), async (req, res) => {
       minimumPrice: Number(minimumPrice),
       readyInMinutes: Number(readyInMinutes) || 5,
       status: status || "ON",
+      images: images || [],
+      primaryImage: primaryImage || (images && images.length > 0 ? images[0] : null),
       lastVerifiedAt: new Date(),
     },
     { upsert: true, new: true }
@@ -45,7 +47,7 @@ router.post("/inventory", auth, allow("supplier"), async (req, res) => {
 router.patch("/inventory/:id", auth, allow("supplier"), async (req, res) => {
   const row = await Inventory.findOne({ _id: req.params.id, supplierId: req.user.businessId });
   if (!row) return res.status(404).json({ success: false, message: "Not found" });
-  const fields = ["availableQty", "minimumPrice", "readyInMinutes", "status"];
+  const fields = ["availableQty", "minimumPrice", "readyInMinutes", "status", "images", "primaryImage"];
   fields.forEach((f) => {
     if (req.body[f] !== undefined) row[f] = req.body[f];
   });
@@ -56,6 +58,7 @@ router.patch("/inventory/:id", auth, allow("supplier"), async (req, res) => {
   res.json({ success: true, inventory: row });
 });
 
+// Note: Bulk upload does not support images - add images via POST/PATCH individual inventory items
 router.post("/inventory/bulk", auth, allow("supplier"), async (req, res) => {
   const items = req.body.items || [];
   const saved = [];

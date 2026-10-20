@@ -48,6 +48,8 @@ router.get("/availability", auth, async (req, res) => {
           condition: sku.condition,
         },
         availableQty: sellable,
+        primaryImage: inv.primaryImage,
+        images: inv.images,
         pricing: {
           landedPrice: pricing.landedPrice,
           deliveryCharge: pricing.deliveryCharge,

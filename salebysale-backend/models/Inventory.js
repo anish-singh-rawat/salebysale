@@ -10,6 +10,8 @@ const inventorySchema = new mongoose.Schema(
     lastVerifiedAt: { type: Date, default: Date.now },
     readyInMinutes: { type: Number, default: 5 },
     status: { type: String, enum: ["ON", "OFF", "STALE"], default: "ON" },
+    images: { type: [String], default: [] },
+    primaryImage: { type: String, default: null },
   },
   { timestamps: true }
 );

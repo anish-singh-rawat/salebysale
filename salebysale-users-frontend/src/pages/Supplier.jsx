@@ -5,6 +5,8 @@ export function SupplierStock() {
   const [inventory, setInventory] = useState([]);
   const [skus, setSkus] = useState([]);
   const [form, setForm] = useState({ skuId: "", availableQty: 2, minimumPrice: 10000, readyInMinutes: 5, status: "ON" });
+  const [images, setImages] = useState([]);
+  const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
   const [msg, setMsg] = useState("");
   const [showSkuBrowser, setShowSkuBrowser] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,9 +33,31 @@ export function SupplierStock() {
 
   async function save(e) {
     e.preventDefault();
-    await api("/supplier/inventory", { method: "POST", body: form });
+    const body = {
+      ...form,
+      images,
+      primaryImage: images[primaryImageIndex] || null
+    };
+    await api("/supplier/inventory", { method: "POST", body });
     setMsg("Stock saved & verified now");
+    setImages([]);
+    setPrimaryImageIndex(0);
     load();
+  }
+
+  function handleImageUpload(e) {
+    const files = Array.from(e.target.files).slice(0, 5);
+    files.forEach(file => {
+      if (file.size > 2 * 1024 * 1024) {
+        setMsg(`${file.name} exceeds 2MB limit`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImages(prev => [...prev, event.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   async function handleCSVUpload(e) {
@@ -129,6 +153,80 @@ export function SupplierStock() {
             <input type="number" value={form.readyInMinutes} onChange={(e) => setForm({ ...form, readyInMinutes: Number(e.target.value) })} />
           </label>
         </div>
+        
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label>
+            Product Images (up to 5, max 2MB each)
+            <input 
+              type="file" 
+              accept="image/jpeg,image/png,image/webp" 
+              multiple 
+              onChange={handleImageUpload} 
+            />
+          </label>
+          {images.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "12px", marginTop: "12px" }}>
+              {images.map((img, idx) => (
+                <div 
+                  key={idx} 
+                  style={{ 
+                    position: "relative", 
+                    border: primaryImageIndex === idx ? "3px solid var(--primary)" : "1px solid var(--line)", 
+                    borderRadius: "8px", 
+                    overflow: "hidden",
+                    padding: "4px"
+                  }}
+                >
+                  <img 
+                    src={img} 
+                    alt={`Product ${idx+1}`} 
+                    style={{ 
+                      width: "100%", 
+                      height: "100px", 
+                      objectFit: "cover",
+                      borderRadius: "4px"
+                    }} 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setPrimaryImageIndex(idx)} 
+                    className="btn ghost small"
+                    style={{ 
+                      position: "absolute", 
+                      top: 8, 
+                      left: 8, 
+                      fontSize: "10px", 
+                      padding: "4px 8px",
+                      minHeight: "24px"
+                    }}
+                  >
+                    {primaryImageIndex === idx ? "★ Primary" : "Set Primary"}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setImages(prev => prev.filter((_, i) => i !== idx));
+                      if (primaryImageIndex === idx) setPrimaryImageIndex(0);
+                      if (primaryImageIndex > idx) setPrimaryImageIndex(primaryImageIndex - 1);
+                    }} 
+                    className="btn danger small"
+                    style={{ 
+                      position: "absolute", 
+                      bottom: 8, 
+                      right: 8, 
+                      fontSize: "10px", 
+                      padding: "4px 8px",
+                      minHeight: "24px"
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <button className="btn">Upsert stock</button>
       </form>
 
@@ -185,6 +283,7 @@ export function SupplierStock() {
       <table>
         <thead>
           <tr>
+            <th>Image</th>
             <th>SKU</th>
             <th>Avail / reserved</th>
             <th>Floor</th>
@@ -195,6 +294,24 @@ export function SupplierStock() {
         <tbody>
           {inventory.map((row) => (
             <tr key={row._id}>
+              <td>
+                {row.primaryImage ? (
+                  <img 
+                    src={row.primaryImage} 
+                    alt="Product" 
+                    style={{ 
+                      width: "50px", 
+                      height: "50px", 
+                      objectFit: "cover", 
+                      borderRadius: "4px", 
+                      cursor: "pointer" 
+                    }} 
+                    onClick={() => window.open(row.primaryImage)}
+                  />
+                ) : (
+                  <span className="muted tiny">No image</span>
+                )}
+              </td>
               <td>
                 {row.skuId?.brand} {row.skuId?.model} {row.skuId?.color}
               </td>

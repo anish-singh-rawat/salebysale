@@ -34,7 +34,7 @@ export default function Register() {
     <div className="hero-bg">
       <div className="wrap" style={{ maxWidth: 640 }}>
         <Link to="/" className="brand" style={{ margin: "32px 0" }}>
-          <div className="mark">S</div> Onboard dukaan
+          <div className="mark">S</div> Join SaleBySale Network
         </Link>
         <div className="card">
           {error && <div className="alert">{error}</div>}
@@ -42,9 +42,8 @@ export default function Register() {
             <label>
               Role
               <select value={form.role} onChange={set("role")}>
-                <option value="buyer">Buyer retailer</option>
-                <option value="supplier">Supplier shop</option>
-                <option value="rider">Rider</option>
+                <option value="buyer">Retailer (Buyer)</option>
+                <option value="supplier">Wholesaler (Supplier)</option>
               </select>
             </label>
             <div className="grid cols-2">
@@ -88,7 +87,7 @@ export default function Register() {
               <input type="password" value={form.password} onChange={set("password")} />
             </label>
             <button className="btn" type="submit">
-              Submit KYC (pending admin)
+              Submit Registration
             </button>
           </form>
         </div>

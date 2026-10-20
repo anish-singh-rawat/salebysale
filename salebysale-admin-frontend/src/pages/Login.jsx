@@ -25,11 +25,11 @@ export default function Login() {
     <div className="hero-bg">
       <div className="wrap" style={{ maxWidth: 480 }}>
         <Link to="/" className="brand" style={{ margin: "32px 0" }}>
-          <div className="mark">S</div> SELL BY SELL
+          <div className="mark">S</div> SaleBySale Admin
         </Link>
         <div className="card">
-          <h2>Admin Panel Login</h2>
-          <p className="muted">Authorized personnel only — SaleBySale Management.</p>
+          <h2>Admin Portal Sign In</h2>
+          <p className="muted">Authorized personnel only</p>
           {error && <div className="alert">{error}</div>}
           <form className="form" onSubmit={onSubmit}>
             <label>
@@ -53,7 +53,7 @@ export default function Login() {
               />
             </label>
             <button className="btn" type="submit">
-              Login to Admin Panel
+              Sign In
             </button>
           </form>
         </div>

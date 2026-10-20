@@ -180,6 +180,20 @@ export function BuyerSearch() {
             {offers.offers.map((o) => (
               <div className="card offer" key={o.inventoryId}>
                 <div>
+                  {o.primaryImage && (
+                    <img 
+                      src={o.primaryImage} 
+                      alt="Product" 
+                      style={{ 
+                        width: "100%", 
+                        maxWidth: "200px",
+                        height: "150px", 
+                        objectFit: "cover", 
+                        borderRadius: "8px", 
+                        marginBottom: "12px" 
+                      }} 
+                    />
+                  )}
                   <div className="badge">{o.listingLabel}</div>
                   <h3 style={{ margin: "8px 0" }}>{inr(o.pricing.landedPrice)} landed</h3>
                   <div className="tiny">

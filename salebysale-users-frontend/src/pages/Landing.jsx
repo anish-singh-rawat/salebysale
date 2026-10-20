@@ -6,88 +6,93 @@ export default function Landing() {
       <header className="topbar">
         <div className="brand">
           <div className="mark">S</div>
-          <div>
-            SELL BY SELL
-            <div className="tag">Haridwar · Hyperlocal B2B · Express</div>
-          </div>
+          <div>SaleBySale</div>
         </div>
         <div className="row">
           <Link className="btn ghost" to="/login">
             Sign in
           </Link>
           <Link className="btn" to="/register">
-            Join the network
+            Join Now
           </Link>
         </div>
       </header>
       <div className="wrap">
         <section className="hero">
           <div>
-            <div className="pills">
-              <span className="pill">2.0 · Oct 2026</span>
-              <span className="pill">Verified B2B</span>
-              <span className="pill">One Network · Every Store · More Sales</span>
-            </div>
             <h1>
-              Haridwar mobile retailers ke liye
-              <span className="gold"> live stock</span> & express delivery.
+              Connect Retailers & <span className="primary">Wholesalers</span>
             </h1>
             <p className="lede">
-              Stock kisi ke bhi ho, sale aapki hogi. Buyer ko sirf SELL BY SELL listing, net price aur ETA dikhega —
-              asli supplier identity chhupi rahegi.
+              List your mobile inventory or find the best wholesale deals. SaleBySale connects buyers and sellers while keeping supplier identities confidential.
             </p>
-            <div className="row" style={{ marginTop: 24 }}>
-              <Link className="btn" to="/login">
-                Open buyer / shop apps
+            <div className="row" style={{ marginTop: 32 }}>
+              <Link className="btn" to="/register?role=buyer">
+                Register as Retailer
               </Link>
-              <Link className="btn ghost" to="/register">
-                Onboard a dukaan
+              <Link className="btn ghost" to="/register?role=supplier">
+                Register as Wholesaler
               </Link>
             </div>
           </div>
           <div className="card">
-            <h3>Order journey</h3>
+            <h3>How It Works</h3>
             <ol className="stat-list">
               <li>
-                <span>1. Search verified SKU</span>
-                <strong>OPPO A58 8/128</strong>
+                <span>Retailers</span>
+                <strong>Browse available stock</strong>
               </li>
               <li>
-                <span>2. Matching engine</span>
-                <strong>price · ETA · rider</strong>
+                <span>Place orders</span>
+                <strong>Competitive pricing</strong>
               </li>
               <li>
-                <span>3. Reserve 3–5 min</span>
-                <strong>atomic lock</strong>
+                <span>Admin manages</span>
+                <strong>Sourcing & delivery</strong>
               </li>
               <li>
-                <span>4. Pickup OTP → delivery OTP</span>
-                <strong>sealed box</strong>
-              </li>
-              <li>
-                <span>5. Settlement</span>
-                <strong>T+1 after POD</strong>
+                <span>Fast fulfillment</span>
+                <strong>Secure payments</strong>
               </li>
             </ol>
           </div>
         </section>
-        <div className="grid cols-4">
-          {[
-            ["Supplier portal", "KYC, stock ON/OFF, floor price, accept, pack, payouts"],
-            ["Retailer app", "Search, landed price, ETA, prepaid, tracking, dispute"],
-            ["Rider app", "Duty, map task, OTP, photo proof, failed reason"],
-            ["Admin console", "Approvals, private identity, dispatch, SLA, fraud"],
-          ].map(([t, d]) => (
-            <div className="card" key={t}>
-              <h3>{t}</h3>
-              <p className="muted">{d}</p>
-            </div>
-          ))}
+        <div className="grid cols-2" style={{ marginTop: 48 }}>
+          <div className="card">
+            <h3>For Retailers</h3>
+            <ul className="stat-list">
+              <li>
+                <span>✓</span>
+                <strong>Browse verified stock</strong>
+              </li>
+              <li>
+                <span>✓</span>
+                <strong>Competitive prices</strong>
+              </li>
+              <li>
+                <span>✓</span>
+                <strong>Fast delivery</strong>
+              </li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3>For Wholesalers</h3>
+            <ul className="stat-list">
+              <li>
+                <span>✓</span>
+                <strong>List your inventory</strong>
+              </li>
+              <li>
+                <span>✓</span>
+                <strong>Reach more retailers</strong>
+              </li>
+              <li>
+                <span>✓</span>
+                <strong>Secure payments</strong>
+              </li>
+            </ul>
+          </div>
         </div>
-        <p className="tiny" style={{ marginTop: 28 }}>
-          Demo logins after seed: admin@sellbysell.com, supplier1@sellbysell.com, buyer@sellbysell.com,
-          rider@sellbysell.com · password Demo@123
-        </p>
       </div>
     </div>
   );
