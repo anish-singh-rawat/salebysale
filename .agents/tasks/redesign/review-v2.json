@@ -1,0 +1,7 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    "StatusBadge bypass in SupplierStock inventory table — The ON/OFF cell renders the badge span directly instead of routing through <StatusBadge>, bypassing the centralised STATUS_CLASS map. Not a visual regression, but a future badge colour change would miss this callsite. Replace with a STATUS_CLASS entry or <StatusBadge status={row.status === \"ON\" ? \"delivered\" : \"cancelled\"} />."
+  ],
+  "reviewDoc": "/Users/mac/freeLancing/salebysale/.agents/tasks/redesign/review-v2.md"
+}
